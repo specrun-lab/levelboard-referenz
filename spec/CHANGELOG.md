@@ -1,5 +1,10 @@
 # Spec-Changelog
 
+## 0.9.0 – 2026-11-20
+- Neu: **Level 9** (Live-Prüfung): `levels/level-09.md`. Live-Suite `checks/tests/level9.spec.ts` mit 5 Checks gegen `LIVE_URL`; Lasttest `checks/loadtest.mjs` (10 Verbindungen, 30 s, nur `fetch`, p50/p95 nach Nearest-Rank); `make level9`.
+- 05: `write-results.mjs` meldet ab Level 9 zusätzlich an die Live-API (`REPORT_LIVE=1`, `LIVE_URL`) und gibt Level 9 die Lastwerte als `metrics` mit.
+- 03: `make check` löscht vor den Tests `checks/.out/loadtest.json`.
+
 ## 0.8.0 – 2026-11-20
 - Neu: **Level 8** (Deployment): `levels/level-08.md`. Job `deploy` bringt die Images per SSH auf den Server (`~/runs/<RUN_ID>/`, Compose-Projekt `<RUN_ID>`, Netz `web`, Alias `<RUN_ID>-web`); Live-Seite unter `https://<RUN_ID>.<LIVE_DOMAIN>`; `deploy/compose.yml`; `checks/report-live.mjs` meldet die Ergebnisse der Pipeline an die Live-API; `make level8`; 4 neue Checks.
 - 02: Umgebungsvariable `LIVE_DOMAIN`.

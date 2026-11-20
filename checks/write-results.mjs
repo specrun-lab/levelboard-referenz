@@ -27,6 +27,12 @@ const walk = (suite) => {
 report.suites.forEach(walk);
 for (const [n, e] of byLevel) if (e.checks.length === 0) throw new Error(`Keine Checks für Level ${n} gefunden`);
 
+// Ab Level 9: Ergebnis des Lasttests (von tests/level9.spec.ts geschrieben) als metrics von Level 9
+const metricsOf = (n) => {
+  if (n !== 9) return {};
+  try { return JSON.parse(fs.readFileSync(path.join(here, '.out/loadtest.json'), 'utf8')); } catch { return {}; }
+};
+
 const now = new Date().toISOString();
 const results = JSON.parse(fs.readFileSync(target, 'utf8'));
 results.run.updatedAt = now;
@@ -38,10 +44,10 @@ for (const l of results.levels) {
   const e = byLevel.get(l.level);
   if (failedAt === null && e) {
     const passed = e.checks.every((c) => c.ok);
-    Object.assign(l, { status: passed ? 'bestanden' : 'fehlgeschlagen', checkedAt: now, durationMs: Math.round(e.durationMs), checks: e.checks });
+    Object.assign(l, { status: passed ? 'bestanden' : 'fehlgeschlagen', checkedAt: now, durationMs: Math.round(e.durationMs), checks: e.checks, metrics: metricsOf(l.level) });
     if (!passed) failedAt = l.level;
   } else if (l.level > Math.min(...levels)) {
-    Object.assign(l, { status: failedAt !== null ? 'gesperrt' : 'offen', checkedAt: null, durationMs: null, checks: [] });
+    Object.assign(l, { status: failedAt !== null ? 'gesperrt' : 'offen', checkedAt: null, durationMs: null, checks: [], metrics: {} });
   }
 }
 
@@ -52,24 +58,27 @@ for (const n of levels) {
   console.log(`Level ${n}: ${l.status}${l.checks.length ? ` (${ok}/${l.checks.length} Checks)` : ''}`);
 }
 
-// Ab Level 5 (REPORT_API=1): jedes geprüfte Level aufsteigend ans Backend melden, nach dem ersten Fehlschlag aufhören.
-let apiOk = true;
-if (process.env.REPORT_API === '1') {
-  const api = process.env.API_URL ?? 'http://127.0.0.1:8081';
+// Meldet die geprüften Levels aufsteigend an ein Backend; hört nach dem ersten Fehlschlag auf.
+async function report(base, label) {
   for (const n of levels) {
     const e = byLevel.get(n);
-    const res = await fetch(`${api}/api/levels/${n}/result`, {
+    const res = await fetch(`${base}/api/levels/${n}/result`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ checks: e.checks, durationMs: Math.round(e.durationMs) }),
+      body: JSON.stringify({ checks: e.checks, durationMs: Math.round(e.durationMs), metrics: metricsOf(n) }),
     }).catch((err) => ({ ok: false, status: 0, text: async () => String(err) }));
     if (!res.ok) {
-      console.log(`Meldung an das Backend für Level ${n} fehlgeschlagen: ${res.status} ${await res.text()}`);
-      apiOk = false;
-      break;
+      console.log(`Meldung an ${label} für Level ${n} fehlgeschlagen: ${res.status} ${await res.text()}`);
+      return false;
     }
-    console.log(`Level ${n} an das Backend gemeldet`);
+    console.log(`Level ${n} an ${label} gemeldet`);
     if (!e.checks.every((c) => c.ok)) break;
   }
+  return true;
 }
+
+// Ab Level 5 (REPORT_API=1): ans lokale Backend; ab Level 9 (REPORT_LIVE=1) zusätzlich an die Live-API.
+let apiOk = true;
+if (process.env.REPORT_API === '1') apiOk = await report(process.env.API_URL ?? 'http://127.0.0.1:8081', 'das Backend');
+if (process.env.REPORT_LIVE === '1') apiOk = (await report(process.env.LIVE_URL ?? '', 'die Live-API')) && apiOk;
 process.exit(failedAt === null && apiOk ? 0 : 1);

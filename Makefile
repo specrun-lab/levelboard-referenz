@@ -7,6 +7,7 @@
 # make level6          wie level5; Level 6 (Repo + CI) liegt auf GitHub, make check fragt es dort ab
 # make level7          wie level6; Level 7 (Images in der Pipeline) liegt auf GitHub und in der GHCR
 # make level8          wie level7; Level 8 (Deployment) läuft auf dem Server unter LIVE_URL
+# make level9          wie level8; make check prüft zusätzlich die Live-Seite (inkl. Lasttest) und meldet an die Live-API
 # make restart-backend startet nur das Backend neu, die Datenbank bleibt erhalten
 # make stop-backend    beendet nur das Backend (z. B. um einen Ausfall nachzustellen)
 # make check           prüft alle Levels bis zum zuletzt gestarteten und schreibt results.json
@@ -19,7 +20,7 @@ URL     ?= http://127.0.0.1:8080
 API_URL ?= http://127.0.0.1:8081
 DB      := $(RUN)/levelboard.db
 # Zuletzt gestartetes Level (von make levelN geschrieben); ohne Datei: höchstes gebautes Level
-LEVEL  := $(shell cat $(RUN)/level 2>/dev/null || echo 8)
+LEVEL  := $(shell cat $(RUN)/level 2>/dev/null || echo 9)
 # Repo auf GitHub (Level 6): specrun-lab/levelboard-<RUN_ID>
 RUN_ID      ?= lokal
 GITHUB_REPO ?= specrun-lab/levelboard-$(RUN_ID)
@@ -29,9 +30,11 @@ LIVE_URL    ?= https://$(RUN_ID).$(LIVE_DOMAIN)
 LEVELS := $(shell seq 1 $(LEVEL))
 # Ab Level 5 meldet make check die Ergebnisse zusätzlich ans Backend
 REPORT_API := $(shell [ $(LEVEL) -ge 5 ] && echo 1 || echo 0)
+# Ab Level 9 meldet make check zusätzlich an die Live-API
+REPORT_LIVE := $(shell [ $(LEVEL) -ge 9 ] && echo 1 || echo 0)
 NGINX_CONF ?= frontend/nginx.conf
 
-.PHONY: level1 level2 level3 level4 level5 level6 level7 level8 restart-backend check down build backend-build start-nginx start-backend stop-backend wait
+.PHONY: level1 level2 level3 level4 level5 level6 level7 level8 level9 restart-backend check down build backend-build start-nginx start-backend stop-backend wait
 
 build:
 	cd frontend && npm ci && npm run build
@@ -111,12 +114,18 @@ level8: level7
 	@echo 8 > $(RUN)/level
 	@echo "Live: $(LIVE_URL)"
 
+# Level 9: lokal wie Level 8; make check prüft zusätzlich die Live-Seite und meldet dorthin
+level9: level8
+	@echo 9 > $(RUN)/level
+	@echo "Live-Prüfung gegen $(LIVE_URL)"
+
 restart-backend: stop-backend start-backend
 	@echo "Backend neu gestartet (Datenbank erhalten)"
 
 check:
 	cd checks && ([ -d node_modules ] || npm ci) && npx playwright install chromium > /dev/null
-	cd checks && BASE_URL=$(URL) API_URL=$(API_URL) GITHUB_REPO=$(GITHUB_REPO) LIVE_URL=$(LIVE_URL) npx playwright test $(foreach n,$(LEVELS),tests/level$(n).spec.ts); REPORT_API=$(REPORT_API) API_URL=$(API_URL) node write-results.mjs $(LEVELS)
+	rm -f checks/.out/loadtest.json
+	cd checks && BASE_URL=$(URL) API_URL=$(API_URL) GITHUB_REPO=$(GITHUB_REPO) LIVE_URL=$(LIVE_URL) npx playwright test $(foreach n,$(LEVELS),tests/level$(n).spec.ts); REPORT_API=$(REPORT_API) API_URL=$(API_URL) REPORT_LIVE=$(REPORT_LIVE) LIVE_URL=$(LIVE_URL) node write-results.mjs $(LEVELS)
 
 down:
 	@if [ -f $(RUN)/frontend.pid ]; then kill $$(cat $(RUN)/frontend.pid) 2>/dev/null || true; rm -f $(RUN)/frontend.pid; fi
