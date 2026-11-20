@@ -1,4 +1,5 @@
-# Levelboard – Pipeline (Level 6): baut und prüft die Levels 1–5 im Specrun-Container.
+# Levelboard – Pipeline: prüft Level 1–5 im Specrun-Container (Level 6), baut und testet die Images (Level 7)
+# und bringt sie auf den Hetzner-Server (Level 8).
 name: CI
 
 on:
@@ -90,3 +91,77 @@ jobs:
       - name: Container stoppen
         if: always()
         run: docker compose down -v
+
+  # Level 8: Images auf den Server bringen. Zugang nur über Org-Secrets, Adresse über die Org-Variable LIVE_DOMAIN.
+  deploy:
+    needs: images
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Nie zwei Deployments desselben Repos gleichzeitig
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    env:
+      IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+      IMAGE_TAG: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26.13.0
+
+      - name: Lauf-ID und Live-Adresse
+        env:
+          LIVE_DOMAIN: ${{ vars.LIVE_DOMAIN }}
+        run: |
+          test -n "$LIVE_DOMAIN" || { echo "Org-Variable LIVE_DOMAIN fehlt" >&2; exit 1; }
+          RUN_ID="${GITHUB_REPOSITORY#*/levelboard-}"
+          echo "RUN_ID=$RUN_ID" >> "$GITHUB_ENV"
+          echo "LIVE_URL=https://$RUN_ID.$LIVE_DOMAIN" >> "$GITHUB_ENV"
+
+      - name: SSH einrichten
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf 'Host levelboard-server\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n  StrictHostKeyChecking yes\n' \
+            "$DEPLOY_HOST" "$DEPLOY_USER" > ~/.ssh/config
+
+      - name: Auf den Server übertragen und starten
+        run: |
+          ssh levelboard-server "mkdir -p runs/$RUN_ID"
+          scp deploy/compose.yml "levelboard-server:runs/$RUN_ID/compose.yml"
+          printf 'RUN_ID=%s\nIMAGE_PREFIX=%s\nIMAGE_TAG=%s\n' "$RUN_ID" "$IMAGE_PREFIX" "$IMAGE_TAG" \
+            | ssh levelboard-server "cat > runs/$RUN_ID/.env"
+          ssh levelboard-server "cd runs/$RUN_ID && docker compose pull -q && docker compose up -d --wait --remove-orphans"
+
+      - name: Warten, bis die Live-Seite den Commit meldet
+        run: |
+          for i in $(seq 1 60); do
+            commit="$(curl -fsS --max-time 10 "$LIVE_URL/api/health" | node -pe 'JSON.parse(require("fs").readFileSync(0, "utf8")).commit' 2> /dev/null || true)"
+            if [ "$commit" = "$IMAGE_TAG" ]; then echo "Live: $LIVE_URL (Commit $commit)"; exit 0; fi
+            sleep 3
+          done
+          echo "Live-Seite meldet nicht den Commit $IMAGE_TAG" >&2
+          exit 1
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: levelboard-report
+          path: report
+
+      - name: Ergebnisse der Pipeline an die Live-API melden
+        run: node checks/report-live.mjs "$(find report -name results.json | head -1)" "$LIVE_URL"
+
+      - name: Live-Seite prüfen
+        run: |
+          curl -fsS --max-time 10 -o /dev/null "$LIVE_URL/"
+          curl -fsS --max-time 10 "$LIVE_URL/config.json" | grep -q '"api"'

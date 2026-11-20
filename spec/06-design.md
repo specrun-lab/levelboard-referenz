@@ -53,9 +53,10 @@ Dazu `color-scheme: dark` auf `:root`.
 - **Links (Marke):** Flexbox mit 12 px Abstand.
   - Zeichen `▮▮▮` (`aria-hidden`) in `--st-bestanden`, 12 px, `letter-spacing: -2px`.
   - Daneben „Levelboard“, 16 px, Gewicht 600, `letter-spacing: 0.01em`.
-- **Rechts:** eine `<dl>` mit drei Paaren, 24 px Abstand. Jedes Paar ist eine Flexbox mit Grundlinien-Ausrichtung und 8 px Abstand.
-  - `<dt>` „Durchlauf“, „Version“ und „Quelle“: 12 px, `--muted`.
-  - `<dd>` mit `run.id`, `run.version` bzw. der Quelle: Schrift `--mono`, 13 px.
+- **Rechts:** eine `<dl>` mit vier Paaren, 24 px Abstand. Jedes Paar ist eine Flexbox mit Grundlinien-Ausrichtung und 8 px Abstand.
+  - `<dt>` „Durchlauf“, „Version“, „Commit“ und „Quelle“ (in dieser Reihenfolge): 12 px, `--muted`.
+  - `<dd>` mit `run.id`, `run.version`, dem Commit bzw. der Quelle: Schrift `--mono`, 13 px.
+  - Commit (ab Spec 0.8.0): die ersten 7 Zeichen von `run.commit`, „–“ bei `null`. Das `<dd>` hat `data-testid="run-commit"` und den vollen Wert als `title` (bei `null` kein `title`).
   - Quelle (ab Spec 0.5.0): „Datei“ im Datei-Modus, „Backend“ im API-Modus, „–“ solange `config.json` noch nicht geladen ist. Das `<dd>` hat `data-testid="run-source"` und `data-source="file"`, `"api"` bzw. leer.
 
 ## Hinweis (nur bei `missing`, `invalid` und `unavailable`)
@@ -109,7 +110,7 @@ Dazu `color-scheme: dark` auf `:root`.
 |---|---|
 | ab 1200 px | 5 Spalten |
 | 640–1199 px | Raster mit 2 Spalten |
-| unter 640 px | Raster mit 1 Spalte und 12 px Abstand; `main` mit 16 px Innenabstand und 16 px Abstand; Kopfzeile mit 0 / 16 px Innenabstand und 16 px Abstand zwischen den Paaren; die `<dt>` der Kopfzeile ausgeblendet; das Paar „Quelle“ ganz ausgeblendet (das `<dd>` bleibt im DOM); Zusammenfassung untereinander (Spalte, gestreckt) mit 16 px Abstand und 16 px Innenabstand |
+| unter 640 px | Raster mit 1 Spalte und 12 px Abstand; `main` mit 16 px Innenabstand und 16 px Abstand; Kopfzeile mit 0 / 16 px Innenabstand und 16 px Abstand zwischen den Paaren; die `<dt>` der Kopfzeile ausgeblendet; die Paare „Commit“ und „Quelle“ ganz ausgeblendet (die `<dd>` bleiben im DOM); Zusammenfassung untereinander (Spalte, gestreckt) mit 16 px Abstand und 16 px Innenabstand |
 
 Bei 375 px Breite darf es kein horizontales Scrollen geben.
 
@@ -119,6 +120,7 @@ Bei 375 px Breite darf es kein horizontales Scrollen geben.
 | `board` | Wurzelelement, mit `data-state` |
 | `run-id` | `<dd>` mit der Durchlauf-ID |
 | `run-version` | `<dd>` mit der Version |
+| `run-commit` | `<dd>` mit dem kurzen Commit (ab Spec 0.8.0) |
 | `run-source` | `<dd>` mit der Quelle, mit `data-source` (ab Level 5) |
 | `notice` | Hinweis, mit `data-kind="missing"` bzw. `"invalid"` |
 | `summary-reached` | Element mit dem Wert „<n> / 10“ (Textinhalt z. B. `2 / 10`) |

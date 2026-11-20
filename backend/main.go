@@ -36,6 +36,8 @@ func main() {
 		log.Fatalf("Datenbank %s: %v", dbPath, err)
 	}
 	defer store.Close()
+	// Commit des Images (Level 8): kommt im Container aus dem Build-Argument REVISION
+	store.SetCommit(os.Getenv("LEVELBOARD_COMMIT"))
 	log.Printf("Datenbank: %s", dbPath)
 
 	srv := &http.Server{

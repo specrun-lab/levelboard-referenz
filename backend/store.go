@@ -112,8 +112,21 @@ type Store struct {
 	db      *sql.DB
 	runID   string
 	version string
+	commit  *string // Commit des laufenden Images (LEVELBOARD_COMMIT), sonst nil
 	now     func() time.Time
 }
+
+// SetCommit legt den Commit fest, den run.commit und /api/health melden; leer heißt unbekannt (null).
+func (s *Store) SetCommit(c string) {
+	if c == "" {
+		s.commit = nil
+		return
+	}
+	s.commit = &c
+}
+
+// Commit liefert den Commit des laufenden Images oder nil.
+func (s *Store) Commit() *string { return s.commit }
 
 func OpenStore(path, runID, version string, now func() time.Time) (*Store, error) {
 	if now == nil {
@@ -205,10 +218,12 @@ func scanLevel(sc interface{ Scan(...any) error }) (Level, error) {
 	return l, nil
 }
 
+func (s *Store) run() Run { return Run{ID: s.runID, Version: s.version, Commit: s.commit} }
+
 const levelCols = `level, status, checked_at, duration_ms, checks, metrics`
 
-func snapshot(q querier, runID, version string) (Results, error) {
-	res := Results{Run: Run{ID: runID, Version: version}, Levels: make([]Level, 0, len(Titles))}
+func snapshot(q querier, run Run) (Results, error) {
+	res := Results{Run: run, Levels: make([]Level, 0, len(Titles))}
 	rows, err := q.Query(`SELECT ` + levelCols + ` FROM levels ORDER BY level`)
 	if err != nil {
 		return Results{}, err
@@ -237,7 +252,7 @@ func snapshot(q querier, runID, version string) (Results, error) {
 
 // Snapshot liefert den Gesamtstand.
 func (s *Store) Snapshot() (Results, error) {
-	return snapshot(s.db, s.runID, s.version)
+	return snapshot(s.db, s.run())
 }
 
 // Level liefert ein einzelnes Level (1–10).
@@ -310,7 +325,7 @@ func (s *Store) Report(n int, rep Report) (Results, error) {
 	if _, err := tx.Exec(`INSERT INTO meta (key, value) VALUES ('updated_at', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, now); err != nil {
 		return Results{}, err
 	}
-	res, err := snapshot(tx, s.runID, s.version)
+	res, err := snapshot(tx, s.run())
 	if err != nil {
 		return Results{}, err
 	}

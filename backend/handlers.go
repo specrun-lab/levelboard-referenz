@@ -98,7 +98,7 @@ func NewHandler(s *Store) http.Handler {
 		if !allow(w, r, http.MethodGet) {
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "version": s.version})
+		writeJSON(w, http.StatusOK, map[string]any{"status": "ok", "version": s.version, "commit": s.Commit()})
 	})
 
 	mux.HandleFunc("/api/levels", func(w http.ResponseWriter, r *http.Request) {

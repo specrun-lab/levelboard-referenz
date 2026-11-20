@@ -3,8 +3,9 @@
 ## Projektstruktur (im Arbeitsverzeichnis)
 ```
 Makefile
-.github/workflows/ci.yml   – ab Level 6 (ab Level 7 mit Job „images“)
+.github/workflows/ci.yml   – ab Level 6 (ab Level 7 mit Job „images“, ab Level 8 mit Job „deploy“)
 docker-compose.yml         – ab Level 7 (nur in der Pipeline benutzt)
+deploy/compose.yml         – ab Level 8 (Compose-Datei für den Server)
 .gitignore                 – node_modules/, dist/, .run/, .out/, test-results/, *.tsbuildinfo, backend/bin/
 frontend/
   package.json
@@ -35,8 +36,10 @@ checks/
   tests/level5.spec.ts     – ab Level 5
   tests/level6.spec.ts     – ab Level 6
   tests/level7.spec.ts     – ab Level 7
+  tests/level8.spec.ts     – ab Level 8
   tests/container.spec.ts  – ab Level 7, nur in der Pipeline (Job „images“)
   write-results.mjs
+  report-live.mjs          – ab Level 8, nur in der Pipeline (Job „deploy“)
 backend/                   – ab Level 3: Go-Modul (siehe levels/level-03.md)
   go.mod, go.sum           – ab Level 4 mit modernc.org/sqlite
   Dockerfile, .dockerignore – ab Level 7
@@ -136,13 +139,14 @@ Der Prüfer nutzt ausschließlich diese Befehle. Sie müssen aus dem Arbeitsverz
 |---|---|
 | `make level1` | ruft zuerst `make down` auf. Dann in `frontend/`: `npm ci`, `npm run build`. Danach startet es `vite preview` **im Hintergrund**: Prozessnummer in `.run/frontend.pid`, Ausgabe in `.run/frontend.log`, stdin von `/dev/null`. Es schreibt `1` in die Datei `.run/level`. Es wartet höchstens 60 s, bis `http://127.0.0.1:8080/` antwortet, und gibt dann `Levelboard läuft auf http://127.0.0.1:8080` aus. Antwortet der Port nicht, gibt es die Logs aus `.run/` aus und endet mit Fehlercode. Der Befehl kehrt zurück, während die Seite weiterläuft. |
 | `make level2` | ruft zuerst `make down` auf, baut das Frontend wie `level1` und startet dann nginx aus dem Projektordner mit `nginx -p "$(CURDIR)/" -e .run/nginx-error.log -c frontend/nginx.conf`. Vorher legt es `.run/nginx-tmp/` an. nginx schreibt seine Prozessnummer selbst nach `.run/nginx.pid`. Es schreibt `2` nach `.run/level` und wartet wie `level1` auf Port 8080 (gleiche Meldung). |
-| `make check` | prüft **alle Levels von 1 bis zum zuletzt gestarteten** (Wert aus `.run/level`; fehlt die Datei: das höchste gebaute Level, derzeit 7). Es installiert die Abhängigkeiten in `checks/`, falls `node_modules` fehlt (`npm ci`), und führt `npx playwright install chromium` aus. Dann lässt es genau die Dateien `tests/level1.spec.ts` … `tests/level<N>.spec.ts` mit `BASE_URL=$(URL)` laufen (Make-Variable `URL`, Standard `http://127.0.0.1:8080`). Ab Level 3 setzt es zusätzlich `API_URL=$(API_URL)` (Standard `http://127.0.0.1:8081`), ab Level 6 `GITHUB_REPO=$(GITHUB_REPO)`. Danach führt es **immer** `node write-results.mjs 1 … N` aus, ab Level 5 mit `REPORT_API=1` und `API_URL=$(API_URL)` (siehe `05-datenmodell.md`), auch wenn Tests fehlschlagen. Der Exit-Code ist 0 genau dann, wenn alle Checks bestanden sind. |
+| `make check` | prüft **alle Levels von 1 bis zum zuletzt gestarteten** (Wert aus `.run/level`; fehlt die Datei: das höchste gebaute Level, derzeit 8). Es installiert die Abhängigkeiten in `checks/`, falls `node_modules` fehlt (`npm ci`), und führt `npx playwright install chromium` aus. Dann lässt es genau die Dateien `tests/level1.spec.ts` … `tests/level<N>.spec.ts` mit `BASE_URL=$(URL)` laufen (Make-Variable `URL`, Standard `http://127.0.0.1:8080`). Ab Level 3 setzt es zusätzlich `API_URL=$(API_URL)` (Standard `http://127.0.0.1:8081`), ab Level 6 `GITHUB_REPO=$(GITHUB_REPO)`, ab Level 8 `LIVE_URL=$(LIVE_URL)` (Make-Variable, Standard `https://$(RUN_ID).$(LIVE_DOMAIN)`; `LIVE_DOMAIN` kommt aus der Umgebung). Danach führt es **immer** `node write-results.mjs 1 … N` aus, ab Level 5 mit `REPORT_API=1` und `API_URL=$(API_URL)` (siehe `05-datenmodell.md`), auch wenn Tests fehlschlagen. Der Exit-Code ist 0 genau dann, wenn alle Checks bestanden sind. |
 | `make level3` | wie `make level2` (inklusive `make down` und Frontend-Build). Zusätzlich baut es das Backend mit `go build -o bin/levelboard-backend .` in `backend/`, **löscht** `.run/levelboard.db` samt `-wal`/`-shm` (frische Datenbank) und startet das Backend mit `LEVELBOARD_DB=.run/levelboard.db` im Hintergrund: Prozessnummer in `.run/backend.pid`, Ausgabe angehängt an `.run/backend.log`, stdin von `/dev/null`. Es schreibt `3` nach `.run/level` und wartet höchstens 60 s auf `http://127.0.0.1:8080/` und `http://127.0.0.1:8081/api/health`. Danach gibt es die Zeilen `Levelboard läuft auf http://127.0.0.1:8080` und `Backend läuft auf http://127.0.0.1:8081` aus. |
 | `make level4` | genau wie `make level3`, schreibt danach aber `4` nach `.run/level` und gibt zusätzlich `Datenbank: .run/levelboard.db` aus. |
 | `make restart-backend` | beendet nur das Backend (wartet bis zu 5 s, bis der Prozess weg ist) und startet es wieder wie oben, **ohne** die Datenbank zu löschen. Wartet auf `/api/health` und gibt `Backend neu gestartet (Datenbank erhalten)` aus. |
 | `make level5` | ruft `make down` auf, baut Frontend und Backend wie `level3`, startet nginx mit **`frontend/nginx-api.conf`** statt `nginx.conf`, löscht die Datenbank, startet das Backend, schreibt `{"source":"api"}` nach `frontend/dist/config.json` und `5` nach `.run/level`. Es wartet auf `http://127.0.0.1:8080/api/health` (also durch die Weiterleitung) und gibt aus: `Levelboard läuft auf http://127.0.0.1:8080 (Quelle: Backend)`, `Backend läuft auf http://127.0.0.1:8081`, `Datenbank: .run/levelboard.db`. |
 | `make level6` | genau wie `make level5`, danach `6` nach `.run/level` und Ausgabe `Repo: https://github.com/<GITHUB_REPO>` (siehe `levels/level-06.md`). |
 | `make level7` | genau wie `make level6`, danach `7` nach `.run/level` und Ausgabe `Images: ghcr.io/<GITHUB_REPO>-frontend und ghcr.io/<GITHUB_REPO>-backend` (siehe `levels/level-07.md`). |
+| `make level8` | genau wie `make level7`, danach `8` nach `.run/level` und Ausgabe `Live: <LIVE_URL>` (siehe `levels/level-08.md`). |
 | `make stop-backend` | beendet nur das Backend (wartet bis zu 5 s auf das Ende des Prozesses) und löscht `.run/backend.pid`. Ohne laufendes Backend ist es ohne Fehler. nginx und die Datenbank bleiben. |
 | `make down` | beendet die Prozesse aus `.run/frontend.pid`, `.run/nginx.pid` und `.run/backend.pid`, falls vorhanden, und löscht die PID-Dateien sowie `.run/level`. Ohne laufenden Prozess ist es ohne Fehler. |
 

@@ -1,0 +1,37 @@
+# Levelboard auf dem Server (Level 8). Der Job „deploy“ legt diese Datei nach ~/runs/<RUN_ID>/compose.yml,
+# daneben eine .env mit RUN_ID, IMAGE_PREFIX und IMAGE_TAG (Commit-Hash).
+# Caddy auf dem Server leitet https://<RUN_ID>.<LIVE_DOMAIN> an <RUN_ID>-web:8080 im Netz „web“ weiter.
+name: ${RUN_ID:?RUN_ID fehlt}
+
+services:
+  backend:
+    image: ${IMAGE_PREFIX:?IMAGE_PREFIX fehlt}-backend:${IMAGE_TAG:?IMAGE_TAG fehlt}
+    restart: unless-stopped
+    environment:
+      RUN_ID: ${RUN_ID}
+    volumes:
+      - levelboard-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/api/health"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  frontend:
+    image: ${IMAGE_PREFIX}-frontend:${IMAGE_TAG}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      default: {}
+      web:
+        aliases:
+          - ${RUN_ID}-web
+
+networks:
+  web:
+    external: true
+
+volumes:
+  levelboard-data:

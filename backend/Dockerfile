@@ -17,6 +17,7 @@ RUN adduser -D -H -u 10001 levelboard \
 COPY --from=build /out/levelboard-backend /usr/local/bin/levelboard-backend
 USER levelboard
 ENV LEVELBOARD_ADDR=0.0.0.0:8081 \
-    LEVELBOARD_DB=/data/levelboard.db
+    LEVELBOARD_DB=/data/levelboard.db \
+    LEVELBOARD_COMMIT=${REVISION}
 EXPOSE 8081
 ENTRYPOINT ["/usr/local/bin/levelboard-backend"]

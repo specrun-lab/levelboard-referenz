@@ -25,7 +25,7 @@ In Level 3 liest die Seite weiter `results.json`, und `make check` schreibt weit
 
 | # | Testtitel | Prüft |
 |---|---|---|
-| 1 | `Backend antwortet auf /api/health` | 200, `content-type` exakt `application/json`, Body `{"status":"ok","version":<string>}` |
+| 1 | `Backend antwortet auf /api/health` | 200, `content-type` exakt `application/json`, Body `{"status":"ok","version":<string>,"commit":null}` (lokal ist `LEVELBOARD_COMMIT` nicht gesetzt) |
 | 2 | `GET /api/levels liefert alle 10 Levels im Schema` | 200, Schlüssel genau `run` und `levels`, 10 Levels mit `level` 1–10, gültigem Status und `checks` als Array |
 | 3 | `Ergebnis melden setzt Status und Zeitpunkt` | `POST /api/levels/1/result` mit einem bestandenen Check und `durationMs: 10` → 200, Level 1 `bestanden`, `checkedAt` ein gültiges Datum, `durationMs` 10 |
 | 4 | `Fehlschlag sperrt höhere Levels` | `POST /api/levels/1/result` mit einem nicht bestandenen Check → Level 1 `fehlgeschlagen`, Levels 2–10 `gesperrt` |

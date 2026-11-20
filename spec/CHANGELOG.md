@@ -1,5 +1,11 @@
 # Spec-Changelog
 
+## 0.8.0 – 2026-11-20
+- Neu: **Level 8** (Deployment): `levels/level-08.md`. Job `deploy` bringt die Images per SSH auf den Server (`~/runs/<RUN_ID>/`, Compose-Projekt `<RUN_ID>`, Netz `web`, Alias `<RUN_ID>-web`); Live-Seite unter `https://<RUN_ID>.<LIVE_DOMAIN>`; `deploy/compose.yml`; `checks/report-live.mjs` meldet die Ergebnisse der Pipeline an die Live-API; `make level8`; 4 neue Checks.
+- 02: Umgebungsvariable `LIVE_DOMAIN`.
+- 04/openapi: `/api/health` und `run.commit` melden den Commit aus `LEVELBOARD_COMMIT` (lokal `null`). Level 3, Check 1 erwartet deshalb `commit: null`.
+- 06: Kopfzeile mit viertem Paar „Commit“ (`run-commit`), unter 640 px ausgeblendet.
+
 ## 0.7.0 – 2026-11-20
 - Neu: **Level 7** (Images in der Pipeline): `levels/level-07.md`. Zweistufige Dockerfiles auf Basis `nginx:1.31.9-alpine` und `alpine:3.23` (Backend ohne root, UID 10001, Volume `/data`); `nginx-container.conf`; `docker-compose.yml`; Pipeline-Job `images` (bauen, im Runner starten, Container-Suite, öffentlich in die GHCR pushen); `make level7`; 6 Container-Checks und 3 lokale Checks.
 - 04: Backend-Adresse über `LEVELBOARD_ADDR` (Standard unverändert `127.0.0.1:8081`).

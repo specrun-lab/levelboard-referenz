@@ -100,10 +100,11 @@ components:
     Health:
       type: object
       additionalProperties: false
-      required: [status, version]
+      required: [status, version, commit]
       properties:
         status: { const: ok }
         version: { type: string, minLength: 1 }
+        commit: { type: [string, 'null'], description: 'Wert von LEVELBOARD_COMMIT (ab Spec 0.8.0), sonst null' }
     Check:
       type: object
       additionalProperties: false

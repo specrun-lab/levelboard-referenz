@@ -25,10 +25,26 @@ func TestHealth(t *testing.T) {
 	if rec.Code != 200 || rec.Header().Get("Content-Type") != "application/json" {
 		t.Fatalf("Status %d, Typ %q", rec.Code, rec.Header().Get("Content-Type"))
 	}
-	var b map[string]string
+	var b map[string]any
 	_ = json.Unmarshal(rec.Body.Bytes(), &b)
-	if b["status"] != "ok" || b["version"] != "0.1.0" {
+	if c, ok := b["commit"]; b["status"] != "ok" || b["version"] != "0.1.0" || !ok || c != nil || len(b) != 3 {
 		t.Errorf("Body %v", b)
+	}
+}
+
+func TestCommitInHealthUndLevels(t *testing.T) {
+	s := newTestStore(t, fixedNow)
+	s.SetCommit("0123456789abcdef0123456789abcdef01234567")
+	h := NewHandler(s)
+	var b map[string]any
+	_ = json.Unmarshal(do(t, h, "GET", "/api/health", "", "").Body.Bytes(), &b)
+	if b["commit"] != "0123456789abcdef0123456789abcdef01234567" {
+		t.Errorf("health: %v", b)
+	}
+	var r Results
+	_ = json.Unmarshal(do(t, h, "GET", "/api/levels", "", "").Body.Bytes(), &r)
+	if r.Run.Commit == nil || *r.Run.Commit != "0123456789abcdef0123456789abcdef01234567" {
+		t.Errorf("run.commit: %v", r.Run.Commit)
 	}
 }
 

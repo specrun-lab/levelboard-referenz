@@ -318,7 +318,8 @@ dd {
     display: none;
   }
 
-  .run-source {
+  .run-source,
+  .run-commit {
     display: none !important;
   }
 

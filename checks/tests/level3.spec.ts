@@ -18,7 +18,7 @@ test.describe('level-3', () => {
     const res = await request.get(`${API}/api/health`);
     expect(res.status()).toBe(200);
     expect(res.headers()['content-type']).toBe('application/json');
-    expect(await res.json()).toEqual({ status: 'ok', version: expect.any(String) });
+    expect(await res.json()).toEqual({ status: 'ok', version: expect.any(String), commit: null });
   });
 
   test('GET /api/levels liefert alle 10 Levels im Schema', async ({ request }) => {

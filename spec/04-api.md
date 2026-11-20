@@ -14,11 +14,12 @@ Der verbindliche Vertrag ist **`openapi.yaml`** (OpenAPI 3.1). Diese Datei erkl√
 - Abweichungen:
   - `run.id` kommt aus der Umgebungsvariablen `RUN_ID`, ohne diese `lokal`.
   - `run.version` ist `0.1.0`.
+  - `run.commit` (ab Spec 0.8.0) ist der Wert der Umgebungsvariablen `LEVELBOARD_COMMIT`; ohne sie oder bei leerem Wert `null`. Lokal ist er also `null`, im Image der Commit-Hash (siehe `levels/level-08.md`). Derselbe Wert steht in jeder Antwort mit Gesamtstand und als `commit` in `/api/health`.
 
 ## Endpunkte
 | Methode | Pfad | Erfolg |
 |---|---|---|
-| `GET` | `/api/health` | 200 `{"status":"ok","version":"0.1.0"}` |
+| `GET` | `/api/health` | 200 `{"status":"ok","version":"0.1.0","commit":null}` |
 | `GET` | `/api/levels` | 200, Gesamtstand im Format von `results.json` |
 | `GET` | `/api/levels/{n}` | 200, ein Level-Objekt |
 | `POST` | `/api/levels/{n}/result` | 200, der neue Gesamtstand (wie `GET /api/levels`) |
