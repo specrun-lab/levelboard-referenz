@@ -1,6 +1,6 @@
 # 00 – Start
 
-**Spec-Version:** 0.9.0 (umfasst Level 1–9)
+**Spec-Version:** 1.0.0 (umfasst Level 1–10)
 
 Du baust das **Levelboard**: eine Web-App, die zeigt, wie weit ein Coding-Agent auf einem Pfad aus 10 Levels gekommen ist, und die sich dabei selbst misst. Du bist dieser Agent.
 
@@ -16,7 +16,7 @@ Du baust das **Levelboard**: eine Web-App, die zeigt, wie weit ein Coding-Agent 
    8. `levels/` – eine Datei pro Level, in aufsteigender Reihenfolge
 2. Baue **alle Levels, für die es eine Datei in `levels/` gibt**, eines nach dem anderen.
 3. Prüfe jedes Level mit deiner eigenen Prüfsuite (`make check`), bevor du zum nächsten gehst.
-4. Lass am Ende die Seite des **höchsten** gebauten Levels laufen (z. B. `make level9`) und führe danach einmal `make check` aus.
+4. Lass am Ende die Seite des **höchsten** gebauten Levels laufen (z. B. `make level10`) und führe danach einmal `make check` aus.
 
 ## Regeln
 - **Keine Rückfragen.** Ist etwas nicht festgelegt, triff die einfachste, naheliegendste Entscheidung und arbeite weiter.

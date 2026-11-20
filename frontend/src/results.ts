@@ -194,3 +194,27 @@ export const STATUS_LABEL: Record<LevelStatus, string> = {
   fehlgeschlagen: 'Fehlgeschlagen',
   gesperrt: 'Gesperrt',
 };
+
+/** Kennzahlen des Abschlussberichts (metrics von Level 10, ab Level 10). */
+export interface ReportMetrics {
+  pipeline: { runId: number; url: string; jobs: { check: number; images: number; deploy: number }; totalS: number };
+  images: { frontendMB: number; backendMB: number };
+  loadtest: { requests: number; errors: number; rps: number; p50Ms: number; p95Ms: number };
+}
+
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+/** Prüft die metrics von Level 10; unvollständig → null (dann zeigt die Seite „noch kein Bericht“). */
+export function parseReport(m: Record<string, unknown>): ReportMetrics | null {
+  const { pipeline: p, images: i, loadtest: l } = m;
+  if (!isObj(p) || !isObj(i) || !isObj(l) || !isObj(p.jobs)) return null;
+  const j = p.jobs;
+  if (!isNum(p.runId) || typeof p.url !== 'string' || !isNum(p.totalS) || !isNum(j.check) || !isNum(j.images) || !isNum(j.deploy)) return null;
+  if (!isNum(i.frontendMB) || !isNum(i.backendMB)) return null;
+  if (![l.requests, l.errors, l.rps, l.p50Ms, l.p95Ms].every(isNum)) return null;
+  return m as unknown as ReportMetrics;
+}
+
+/** 172.8 → „172,8“ (Nachkommastellen fest) */
+export function formatDecimal(n: number, digits = 1): string {
+  return n.toFixed(digits).replace('.', ',');
+}

@@ -40,6 +40,7 @@ Dazu `color-scheme: dark` auf `:root`.
     [Hinweis]       – nur bei data-state missing/invalid/unavailable
     [Zusammenfassung]
     [Raster mit 10 Karten]
+    [Abschlussbericht]  – ab Level 10, immer vorhanden (leer oder gefüllt)
   </main>
 </div>
 ```
@@ -108,11 +109,41 @@ Dazu `color-scheme: dark` auf `:root`.
 ## Responsiv
 | Breite | Anpassung |
 |---|---|
-| ab 1200 px | 5 Spalten |
-| 640–1199 px | Raster mit 2 Spalten |
-| unter 640 px | Raster mit 1 Spalte und 12 px Abstand; `main` mit 16 px Innenabstand und 16 px Abstand; Kopfzeile mit 0 / 16 px Innenabstand und 16 px Abstand zwischen den Paaren; die `<dt>` der Kopfzeile ausgeblendet; die Paare „Commit“ und „Quelle“ ganz ausgeblendet (die `<dd>` bleiben im DOM); Zusammenfassung untereinander (Spalte, gestreckt) mit 16 px Abstand und 16 px Innenabstand |
+| ab 1200 px | 5 Spalten; Kacheln des Abschlussberichts in 4 Spalten |
+| 640–1199 px | Raster mit 2 Spalten; Kacheln des Abschlussberichts ebenfalls in 2 Spalten |
+| unter 640 px | Raster mit 1 Spalte und 12 px Abstand; `main` mit 16 px Innenabstand und 16 px Abstand; Kopfzeile mit 0 / 16 px Innenabstand und 16 px Abstand zwischen den Paaren; die `<dt>` der Kopfzeile ausgeblendet; die Paare „Commit“ und „Quelle“ ganz ausgeblendet (die `<dd>` bleiben im DOM); Zusammenfassung untereinander (Spalte, gestreckt) mit 16 px Abstand und 16 px Innenabstand; Abschlussbericht mit 16 px Innenabstand, Kacheln in 1 Spalte mit 12 px Abstand, Liste mit den Spalten `1fr auto` und ohne Zeitpunkt (ausgeblendet) |
 
 Bei 375 px Breite darf es kein horizontales Scrollen geben.
+
+## Abschlussbericht (ab Level 10)
+Ein Abschnitt unter dem Raster: `<section aria-label="Abschlussbericht" data-testid="report" data-state="ready|empty">`. Er ist gestaltet wie die Zusammenfassung: `--surface`, 1 px `--border`, `--radius`, Innenabstand 24 px, Spalten-Flexbox mit 16 px Abstand. Oben steht die Überschrift `<h2>` „Abschlussbericht“ (16 px, Gewicht 600).
+
+**Gefüllt (`ready`)**, wenn Level 10 den Status `bestanden` oder `fehlgeschlagen` hat **und** seine `metrics` vollständig sind, also alle Zahlen und die URL aus `levels/level-10.md` enthalten. Sonst ist er **leer (`empty`)** und zeigt nur `<p data-testid="report-empty">` mit genau dem Text `Noch kein Abschlussbericht – er erscheint, sobald Level 10 gemeldet ist.` in `--muted`, 14 px.
+
+Gefüllt zeigt er zuerst **4 Kacheln** in einem Raster (4 Spalten, 16 px Abstand), danach eine **Liste der 10 Levels**.
+- Jede Kachel: `--surface-2`, 1 px `--border`, `--radius`, Innenabstand 16 px. Oben ein `<h3>` (12 px, Gewicht 600, `--muted`, Großbuchstaben, `letter-spacing: 0.06em`), darunter eine `<dl>`. Jedes Paar steht in einer Zeile mit `space-between`: `<dt>` 13 px `--muted`, `<dd>` Schrift `--mono` 13 px.
+
+| Kachel (`<h3>`) | `<dt>` | `<dd>`, testid | Wert |
+|---|---|---|---|
+| Ergebnis | Erreicht | `report-reached` | `<erreichtes Level> / 10` |
+| | Score | `report-score` | `<erreichtes Level · 10> / 100` |
+| | Commit | `report-commit` | erste 7 Zeichen von `run.commit`, sonst „–“ |
+| | Erstellt | `report-time` | `checkedAt` von Level 10, formatiert wie „Geprüft“ |
+| Lasttest | p50 | `report-p50` | `<p50Ms> ms` |
+| | p95 | `report-p95` | `<p95Ms> ms` |
+| | Durchsatz | `report-rps` | `<rps> Anfragen/s` mit genau 1 Nachkommastelle und Komma, z. B. `172,8 Anfragen/s` |
+| | Fehler | `report-errors` | `<errors>` |
+| Images | Frontend | `report-image-frontend` | `<frontendMB> MB`, 1 Nachkommastelle mit Komma, z. B. `25,2 MB` |
+| | Backend | `report-image-backend` | `<backendMB> MB`, ebenso |
+| Pipeline | check | `report-job-check` | `<jobs.check> s` |
+| | images | `report-job-images` | `<jobs.images> s` |
+| | deploy | `report-job-deploy` | `<jobs.deploy> s` |
+| | Gesamt | `report-pipeline-total` | `<totalS> s` |
+
+- In der Kachel „Pipeline“ steht unter der `<dl>` zusätzlich ein Link `<a data-testid="report-pipeline-link" href="<pipeline.url>" target="_blank" rel="noreferrer">` mit dem Text „Lauf ansehen“ in `--accent`, 13 px.
+- **Liste:** `<ol data-testid="report-levels">` ohne Aufzählungszeichen, mit 10 `<li data-testid="report-level" data-level="<n>" data-status="<status>">`.
+  - Jede Zeile ist ein Raster mit den Spalten `1fr 140px 160px`, 12 px Abstand, Innenabstand 6 px / 0, oben 1 px `--border`, 13 px.
+  - Inhalt: `L<nn> <Titel>` (z. B. `L01 Statische Seite`), dann der Status wie im Abzeichen in der Farbe `--st-<status>`, dann `checkedAt` formatiert wie „Geprüft“ in `--mono` und `--muted`, rechtsbündig.
 
 ## Verbindliche `data-testid`s
 | testid | Element |
@@ -132,3 +163,7 @@ Bei 375 px Breite darf es kein horizontales Scrollen geben.
 | `level-checked-at` | Wert „Geprüft“ |
 | `level-duration` | Wert „Dauer“ |
 | `level-checks` | Wert „Checks“ |
+| `report` | Abschlussbericht, mit `data-state` `ready` bzw. `empty` (ab Level 10) |
+| `report-empty` | Hinweis „Noch kein Abschlussbericht …“ |
+| `report-reached`, `report-score`, `report-commit`, `report-time`, `report-p50`, `report-p95`, `report-rps`, `report-errors`, `report-image-frontend`, `report-image-backend`, `report-job-check`, `report-job-images`, `report-job-deploy`, `report-pipeline-total`, `report-pipeline-link` | Werte des Abschlussberichts (siehe oben) |
+| `report-levels`, `report-level` | Liste der Levels im Abschlussbericht, Einträge mit `data-level` und `data-status` |

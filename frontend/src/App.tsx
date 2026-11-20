@@ -4,6 +4,7 @@ import Header from './components/Header';
 import Summary from './components/Summary';
 import Notice from './components/Notice';
 import LevelCard from './components/LevelCard';
+import Report from './components/Report';
 
 export default function App() {
   const [source, setSource] = useState<Source | null>(null);
@@ -48,6 +49,7 @@ export default function App() {
             <LevelCard key={l.level} result={l} />
           ))}
         </section>
+        <Report levels={results.levels} commit={results.run.commit} />
       </main>
     </div>
   );

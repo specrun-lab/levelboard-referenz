@@ -1,5 +1,11 @@
 # Spec-Changelog
 
+## 1.0.0 – 2026-11-20
+- Neu: **Level 10** (Metriken veröffentlicht): `levels/level-10.md`. Abschnitt „Abschlussbericht“ unter den Karten (`Report.tsx`, `data-testid="report"`); `checks/collect-report.mjs` sammelt Pipeline-Dauer, Image-Größen und Lasttest; `make check` meldet sie als `metrics` von Level 10 und prüft danach live nach (`tests/live-report.spec.ts`); `make level10`; 3 neue Checks.
+- 05: `metrics` von Level 10 = `checks/.out/report.json`.
+- 06: Gestaltung, Texte und `data-testid`s des Abschlussberichts.
+- Damit beschreibt die Spec alle 10 Levels.
+
 ## 0.9.0 – 2026-11-20
 - Neu: **Level 9** (Live-Prüfung): `levels/level-09.md`. Live-Suite `checks/tests/level9.spec.ts` mit 5 Checks gegen `LIVE_URL`; Lasttest `checks/loadtest.mjs` (10 Verbindungen, 30 s, nur `fetch`, p50/p95 nach Nearest-Rank); `make level9`.
 - 05: `write-results.mjs` meldet ab Level 9 zusätzlich an die Live-API (`REPORT_LIVE=1`, `LIVE_URL`) und gibt Level 9 die Lastwerte als `metrics` mit.

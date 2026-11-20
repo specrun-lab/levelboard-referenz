@@ -8,6 +8,7 @@
 # make level7          wie level6; Level 7 (Images in der Pipeline) liegt auf GitHub und in der GHCR
 # make level8          wie level7; Level 8 (Deployment) läuft auf dem Server unter LIVE_URL
 # make level9          wie level8; make check prüft zusätzlich die Live-Seite (inkl. Lasttest) und meldet an die Live-API
+# make level10         wie level9; make check sammelt die Kennzahlen des Abschlussberichts und prüft ihn danach live
 # make restart-backend startet nur das Backend neu, die Datenbank bleibt erhalten
 # make stop-backend    beendet nur das Backend (z. B. um einen Ausfall nachzustellen)
 # make check           prüft alle Levels bis zum zuletzt gestarteten und schreibt results.json
@@ -20,7 +21,7 @@ URL     ?= http://127.0.0.1:8080
 API_URL ?= http://127.0.0.1:8081
 DB      := $(RUN)/levelboard.db
 # Zuletzt gestartetes Level (von make levelN geschrieben); ohne Datei: höchstes gebautes Level
-LEVEL  := $(shell cat $(RUN)/level 2>/dev/null || echo 9)
+LEVEL  := $(shell cat $(RUN)/level 2>/dev/null || echo 10)
 # Repo auf GitHub (Level 6): specrun-lab/levelboard-<RUN_ID>
 RUN_ID      ?= lokal
 GITHUB_REPO ?= specrun-lab/levelboard-$(RUN_ID)
@@ -34,7 +35,7 @@ REPORT_API := $(shell [ $(LEVEL) -ge 5 ] && echo 1 || echo 0)
 REPORT_LIVE := $(shell [ $(LEVEL) -ge 9 ] && echo 1 || echo 0)
 NGINX_CONF ?= frontend/nginx.conf
 
-.PHONY: level1 level2 level3 level4 level5 level6 level7 level8 level9 restart-backend check down build backend-build start-nginx start-backend stop-backend wait
+.PHONY: level1 level2 level3 level4 level5 level6 level7 level8 level9 level10 restart-backend check down build backend-build start-nginx start-backend stop-backend wait
 
 build:
 	cd frontend && npm ci && npm run build
@@ -119,13 +120,19 @@ level9: level8
 	@echo 9 > $(RUN)/level
 	@echo "Live-Prüfung gegen $(LIVE_URL)"
 
+# Level 10: lokal wie Level 9; make check meldet zusätzlich den Abschlussbericht und prüft ihn live
+level10: level9
+	@echo 10 > $(RUN)/level
+	@echo "Abschlussbericht: $(LIVE_URL)"
+
 restart-backend: stop-backend start-backend
 	@echo "Backend neu gestartet (Datenbank erhalten)"
 
 check:
 	cd checks && ([ -d node_modules ] || npm ci) && npx playwright install chromium > /dev/null
-	rm -f checks/.out/loadtest.json
+	rm -f checks/.out/loadtest.json checks/.out/report.json
 	cd checks && BASE_URL=$(URL) API_URL=$(API_URL) GITHUB_REPO=$(GITHUB_REPO) LIVE_URL=$(LIVE_URL) npx playwright test $(foreach n,$(LEVELS),tests/level$(n).spec.ts); REPORT_API=$(REPORT_API) API_URL=$(API_URL) REPORT_LIVE=$(REPORT_LIVE) LIVE_URL=$(LIVE_URL) node write-results.mjs $(LEVELS)
+	@if [ $(LEVEL) -ge 10 ]; then cd checks && RUN_ID=$(RUN_ID) LIVE_URL=$(LIVE_URL) npx playwright test tests/live-report.spec.ts --reporter=list; fi
 
 down:
 	@if [ -f $(RUN)/frontend.pid ]; then kill $$(cat $(RUN)/frontend.pid) 2>/dev/null || true; rm -f $(RUN)/frontend.pid; fi

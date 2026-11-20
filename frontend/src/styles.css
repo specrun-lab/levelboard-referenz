@@ -298,9 +298,126 @@ dd {
   white-space: nowrap;
 }
 
+/* ---------- Abschlussbericht (ab Level 10) ---------- */
+.report {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.report-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.report-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.report-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.report-tile {
+  padding: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.report-tile h3 {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.report-tile dl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+
+.report-tile dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.report-tile dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.report-tile dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.report-link {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.report-levels {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.report-levels li {
+  display: grid;
+  grid-template-columns: 1fr 140px 160px;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.report-level-status {
+  color: var(--st-offen);
+}
+
+.report-levels li.status-bestanden .report-level-status {
+  color: var(--st-bestanden);
+}
+
+.report-levels li.status-fehlgeschlagen .report-level-status {
+  color: var(--st-fehlgeschlagen);
+}
+
+.report-levels li.status-gesperrt .report-level-status {
+  color: var(--st-gesperrt);
+}
+
+.report-level-time {
+  font-family: var(--mono);
+  color: var(--muted);
+  text-align: right;
+}
+
 /* ---------- Responsiv ---------- */
 @media (max-width: 1199px) {
-  .grid {
+  .grid,
+  .report-tiles {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -338,5 +455,22 @@ dd {
   .grid {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  .report {
+    padding: 16px;
+  }
+
+  .report-tiles {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .report-levels li {
+    grid-template-columns: 1fr auto;
+  }
+
+  .report-level-time {
+    display: none;
   }
 }

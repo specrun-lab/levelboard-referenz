@@ -28,7 +28,7 @@ Feldregeln:
 - Zeitangaben sind ISO-8601 in UTC (`new Date().toISOString()`).
 - `durationMs` ist eine ganze Zahl.
 - Ein Level mit Status `offen` oder `gesperrt` hat `checkedAt: null`, `durationMs: null`, `checks: []`.
-- `metrics` ist `{}`, außer bei Level 9: Dort stehen die Werte des Lasttests (siehe `levels/level-09.md`).
+- `metrics` ist `{}`, außer bei Level 9 (Werte des Lasttests, siehe `levels/level-09.md`) und Level 10 (Kennzahlen des Abschlussberichts, siehe `levels/level-10.md`).
 
 ## Startzustand: `frontend/public/results.json`
 - `run`: `{ "id": "lokal", "version": "0.1.0", "commit": null, "updatedAt": null }`
@@ -79,7 +79,7 @@ Im Zustand `loading`, `missing`, `invalid` und `unavailable` zeigt die Seite den
 ## Melden an das Backend (ab Level 5) und an die Live-API (ab Level 9)
 `write-results.mjs` meldet zusätzlich ans Backend, wenn die Umgebungsvariable `REPORT_API=1` gesetzt ist. `make check` setzt sie ab Level 5. Ab Level 9 setzt `make check` außerdem `REPORT_LIVE=1` und `LIVE_URL`: Dann meldet es nach dem lokalen Backend **zusätzlich** an `<LIVE_URL>`, nach denselben Regeln. Dort lauten die Zeilen `Level <n> an die Live-API gemeldet` bzw. `Meldung an die Live-API für Level <n> fehlgeschlagen: <status> <text>`. Ablauf:
 1. Zuerst wie oben `frontend/dist/results.json` schreiben und die Zeilen `Level <n>: …` ausgeben.
-2. Dann für die angegebenen Levels **aufsteigend** je `POST <API_URL>/api/levels/<n>/result` mit `{"checks": [...], "durationMs": <dauer>, "metrics": <metrics>}`. `metrics` ist `{}`, bei Level 9 der Inhalt von `checks/.out/loadtest.json` (fehlt die Datei: `{}`). `API_URL` ist Standard `http://127.0.0.1:8081`; die Checks und die Dauer sind dieselben wie in `results.json`.
+2. Dann für die angegebenen Levels **aufsteigend** je `POST <API_URL>/api/levels/<n>/result` mit `{"checks": [...], "durationMs": <dauer>, "metrics": <metrics>}`. `metrics` ist `{}`, bei Level 9 der Inhalt von `checks/.out/loadtest.json`, bei Level 10 der von `checks/.out/report.json` (fehlt die Datei: `{}`). `API_URL` ist Standard `http://127.0.0.1:8081`; die Checks und die Dauer sind dieselben wie in `results.json`.
 3. Nach jeder erfolgreichen Meldung die Zeile `Level <n> an das Backend gemeldet` ausgeben.
 4. Nach einem Level mit nicht bestandenem Check **aufhören**, weil höhere Meldungen ohnehin 409 ergäben.
 5. Antwortet das Backend nicht mit 200, die Zeile `Meldung an das Backend für Level <n> fehlgeschlagen: <status> <text>` ausgeben und aufhören.
@@ -98,7 +98,7 @@ Aufruf: `node write-results.mjs <level> [<level> …]`, z. B. `node write-result
    - `checkedAt`: jetzt
    - `durationMs`: die Dauer aus Schritt 2
    - `checks`: die gesammelten Checks
-   - `metrics`: `{}`, bei Level 9 der Inhalt von `checks/.out/loadtest.json` (fehlt die Datei: `{}`)
+   - `metrics`: `{}`, bei Level 9 der Inhalt von `checks/.out/loadtest.json`, bei Level 10 der von `checks/.out/report.json` (fehlt die Datei: `{}`)
 5. Alle übrigen Levels **oberhalb des kleinsten angegebenen Levels** werden gesetzt auf:
    - `gesperrt`, wenn ein Level fehlgeschlagen ist,
    - sonst `offen`,
