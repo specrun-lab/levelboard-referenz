@@ -1,5 +1,9 @@
 # Spec-Changelog
 
+## 0.7.0 – 2026-11-20
+- Neu: **Level 7** (Images in der Pipeline): `levels/level-07.md`. Zweistufige Dockerfiles auf Basis `nginx:1.31.9-alpine` und `alpine:3.23` (Backend ohne root, UID 10001, Volume `/data`); `nginx-container.conf`; `docker-compose.yml`; Pipeline-Job `images` (bauen, im Runner starten, Container-Suite, öffentlich in die GHCR pushen); `make level7`; 6 Container-Checks und 3 lokale Checks.
+- 04: Backend-Adresse über `LEVELBOARD_ADDR` (Standard unverändert `127.0.0.1:8081`).
+
 ## 0.6.0 – 2026-11-20
 - Neu: **Level 6** (Repo + CI): `levels/level-06.md`. Öffentliches Repo `specrun-lab/levelboard-<RUN_ID>`; Pipeline `.github/workflows/ci.yml` mit festen Eckpunkten im Image `ghcr.io/specrun-lab/devcontainer:1`; Artefakt `levelboard-report`; `make level6`; 4 neue Checks über `gh`.
 - 02: `GH_TOKEN` und `RUN_ID` in der Umgebung; Regeln für Zugangsdaten; Image öffentlich in der GHCR.

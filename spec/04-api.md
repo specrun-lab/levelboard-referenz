@@ -3,7 +3,7 @@
 Der verbindliche Vertrag ist **`openapi.yaml`** (OpenAPI 3.1). Diese Datei erklärt die Regeln und gibt Beispiele.
 
 ## Grundlagen
-- Basis-Adresse: `http://127.0.0.1:8081`. Der Server lauscht **nur** auf `127.0.0.1:8081`.
+- Basis-Adresse: `http://127.0.0.1:8081`. Der Server lauscht **nur** auf `127.0.0.1:8081`. Ab Level 7 ist die Adresse über `LEVELBOARD_ADDR` einstellbar (Standard `127.0.0.1:8081`; im Container `0.0.0.0:8081`).
 - Alle Antworten, auch Fehler, haben den Header `Content-Type: application/json` (exakt so, ohne `charset`).
 - Level 3: Daten liegen **im Arbeitsspeicher**; ein Neustart setzt alles zurück.
 - Ab Level 4: Daten liegen in einer **SQLite-Datei** (siehe `05-datenmodell.md`). Ein Neustart nur des Backends behält sie, `make level3` bzw. `make level4` beginnen mit einer frischen Datei.

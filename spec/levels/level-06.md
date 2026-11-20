@@ -35,7 +35,7 @@ Das YAML schreibst du selbst. Diese Punkte sind verbindlich:
 | Schritte | 1. `actions/checkout@v7` · 2. `make level5` · 3. `make check` · 4. Artefakt hochladen |
 | Artefakt | `actions/upload-artifact@v7`, Name **`levelboard-report`**, Inhalt `frontend/dist/results.json` und `checks/.out/playwright.json`, **`if: always()`** (auch wenn `make check` scheitert) |
 
-Der Job ist nur grün, wenn `make check` grün ist. In der Pipeline läuft nur **bis Level 5**: Level 6 prüft die Pipeline selbst und gehört nicht hinein.
+Der Job ist nur grün, wenn `make check` grün ist. In der Pipeline läuft nur **bis Level 5**: Level 6 prüft die Pipeline selbst und gehört nicht hinein. Ab Level 7 kommt ein zweiter Job `images` dazu (siehe `level-07.md`); der Job `check` bleibt unverändert.
 
 ## Makefile
 - `make level6`: genau wie `make level5`, danach `6` nach `.run/level` und die Ausgabe `Repo: https://github.com/<GITHUB_REPO>`.
