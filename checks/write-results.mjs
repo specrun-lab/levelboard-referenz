@@ -20,7 +20,9 @@ const walk = (suite) => {
   if (!byLevel.has(n)) return;
   for (const spec of suite.specs ?? []) {
     const entry = byLevel.get(n);
-    entry.checks.push({ name: spec.title, ok: spec.ok });
+    // Nur ein Test, der wirklich gelaufen und bestanden ist, zählt: Playwright meldet übersprungene Tests mit ok: true
+    const ran = (spec.tests ?? []).length > 0 && spec.tests.every((t) => t.status === 'expected' || t.status === 'flaky');
+    entry.checks.push({ name: spec.title, ok: spec.ok && ran });
     entry.durationMs += (spec.tests ?? []).flatMap((t) => t.results ?? []).reduce((s, r) => s + (r.duration ?? 0), 0);
   }
 };

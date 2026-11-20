@@ -134,7 +134,7 @@ export default defineConfig({
 - `testDir: './tests'`, `retries: 0`, `timeout: 15000`, `workers: 1` (nacheinander; ab Level 3 verändern die Tests den Zustand des Backends)
 - Reporter: `list` und `json` mit `outputFile: '.out/playwright.json'`
 - `use.baseURL`: Umgebungsvariable `BASE_URL`, Standard `http://127.0.0.1:8080`
-- ab Level 10 zwei `projects`: `{ name: 'levels', testIgnore: /level10\.spec\.ts$/ }` und `{ name: 'level-10', testMatch: /level10\.spec\.ts$/, dependencies: ['levels'] }`. Playwright sortiert Testdateien alphabetisch (`level10` vor `level2`); so läuft Level 10 garantiert nach dem Lasttest von Level 9
+- ab Level 10 drei `projects`: `{ name: 'levels', testMatch: /level[1-9]\.spec\.ts$/ }`, `{ name: 'level-10', testMatch: /level10\.spec\.ts$/, dependencies: ['levels'] }` und `{ name: 'weitere', testMatch: /(container|live-report)\.spec\.ts$/ }`. Playwright sortiert Testdateien alphabetisch (`level10` vor `level2`); so läuft Level 10 garantiert nach dem Lasttest von Level 9
 
 Was die Suite pro Level prüft und wie sie ihr Ergebnis meldet, steht in der jeweiligen Level-Datei und in `05-datenmodell.md`.
 

@@ -89,7 +89,7 @@ Im Zustand `loading`, `missing`, `invalid` und `unavailable` zeigt die Seite den
 Aufruf: `node write-results.mjs <level> [<level> …]`, z. B. `node write-results.mjs 1 2`. Ablauf:
 1. Liest `checks/.out/playwright.json`, den JSON-Report von Playwright.
 2. Sammelt für jedes angegebene Level alle Tests aus der `describe`-Gruppe `level-<n>`:
-   - Jeder Test ergibt einen Check `{ name: <Testtitel>, ok: <spec.ok> }`, in Report-Reihenfolge.
+   - Jeder Test ergibt einen Check `{ name: <Testtitel>, ok: … }`, in Report-Reihenfolge. `ok` ist nur `true`, wenn `spec.ok` wahr ist **und** jeder Eintrag in `spec.tests` den `status` `expected` oder `flaky` hat. Ein übersprungener Test (`skipped`, z. B. nach einem Fehler in einer seriellen Gruppe oder einer Projekt-Abhängigkeit) zählt als **nicht** bestanden.
    - Die Dauer des Levels ist die Summe der Testdauern (`results[].duration`) dieser Gruppe, gerundet.
    - Findet es für ein angegebenes Level keinen Check, bricht es mit Fehler ab.
 3. Liest `frontend/dist/results.json`, also den ausgelieferten Build, **nicht** `public/`.
