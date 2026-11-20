@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.run/
+.out/
+test-results/
+*.tsbuildinfo
+backend/bin/

@@ -1,0 +1,341 @@
+/* ---------- Design-Tokens (nur dunkel) ---------- */
+:root {
+  --bg: #0b0d10;
+  --surface: #12151a;
+  --surface-2: #181c22;
+  --border: #242a32;
+  --text: #e6e8eb;
+  --muted: #8a919b;
+  --faint: #5b626c;
+  --accent: #4c8dff;
+
+  --st-offen: #8a919b;
+  --st-bestanden: #2fbf71;
+  --st-fehlgeschlagen: #f0524f;
+  --st-gesperrt: #5f6670;
+
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --radius: 8px;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+dl,
+dd {
+  margin: 0;
+}
+
+/* ---------- Kopfzeile ---------- */
+.header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  color: var(--st-bestanden);
+  font-size: 12px;
+  letter-spacing: -2px;
+}
+
+.brand-name {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.run-meta {
+  display: flex;
+  gap: 24px;
+}
+
+.run-meta div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.run-meta dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.run-meta dd {
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+/* ---------- Hauptbereich ---------- */
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ---------- Hinweis ---------- */
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--st-fehlgeschlagen);
+  border-radius: var(--radius);
+  background: rgba(240, 82, 79, 0.08);
+}
+
+.notice-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--st-fehlgeschlagen);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* ---------- Zusammenfassung ---------- */
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.summary-label,
+.card-facts dt {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.summary-value {
+  font-family: var(--mono);
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.summary-total {
+  color: var(--faint);
+  font-size: 24px;
+}
+
+.summary-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.progress {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+}
+
+.progress-seg {
+  height: 8px;
+  border-radius: 2px;
+  background: var(--st-color);
+}
+
+.summary-updated {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.summary-updated span {
+  font-family: var(--mono);
+  color: var(--text);
+}
+
+/* ---------- Statusfarben ---------- */
+.status-offen {
+  --st-color: var(--st-offen);
+}
+.status-bestanden {
+  --st-color: var(--st-bestanden);
+}
+.status-fehlgeschlagen {
+  --st-color: var(--st-fehlgeschlagen);
+}
+.status-gesperrt {
+  --st-color: var(--st-gesperrt);
+}
+
+/* ---------- Level-Karten ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--st-color);
+  border-radius: var(--radius);
+}
+
+.card.status-gesperrt {
+  opacity: 0.6;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.card-number {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--st-color);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--st-color);
+}
+
+.card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.card-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.card-facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.card-facts dt {
+  font-size: 11px;
+}
+
+.card-facts dd {
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ---------- Responsiv ---------- */
+@media (max-width: 1199px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 639px) {
+  .header {
+    padding: 0 16px;
+  }
+
+  .run-meta {
+    gap: 16px;
+  }
+
+  .run-meta dt {
+    display: none;
+  }
+
+  .run-source {
+    display: none !important;
+  }
+
+  .main {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .summary {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

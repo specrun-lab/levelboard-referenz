@@ -1,0 +1,38 @@
+# Levelboard – Pipeline (Level 6): baut und prüft die Levels 1–5 im Specrun-Container.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: ghcr.io/specrun-lab/devcontainer:1
+      # Container-Jobs brauchen root (Schreibrechte im Arbeitsordner des Runners)
+      options: --user root
+    env:
+      # Go-Module und Build-Cache aus dem Image nutzen (als root zeigt HOME woanders hin)
+      GOMODCACHE: /home/dev/go/pkg/mod
+      GOCACHE: /home/dev/.cache/go-build
+      GOFLAGS: -modcacherw
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Levels 1–5 starten
+        run: make level5
+
+      - name: Prüfsuite
+        run: make check
+
+      - name: Report hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: levelboard-report
+          path: |
+            frontend/dist/results.json
+            checks/.out/playwright.json
