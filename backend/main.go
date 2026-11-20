@@ -13,11 +13,16 @@ import (
 )
 
 const (
-	addr    = "127.0.0.1:8081"
-	version = "0.1.0"
+	defaultAddr = "127.0.0.1:8081"
+	version     = "0.1.0"
 )
 
 func main() {
+	// Adresse: lokal nur 127.0.0.1, im Container 0.0.0.0 (über LEVELBOARD_ADDR)
+	addr := os.Getenv("LEVELBOARD_ADDR")
+	if addr == "" {
+		addr = defaultAddr
+	}
 	runID := os.Getenv("RUN_ID")
 	if runID == "" {
 		runID = "lokal"

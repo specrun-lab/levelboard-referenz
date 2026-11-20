@@ -38,3 +38,55 @@ jobs:
           path: |
             frontend/dist/results.json
             checks/.out/playwright.json
+
+  images:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    env:
+      # ghcr.io/specrun-lab/levelboard-<RUN_ID> → …-frontend und …-backend
+      IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+      IMAGE_TAG: ${{ github.sha }}
+      SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26.13.0
+
+      - name: Images bauen
+        run: docker compose build
+
+      - name: Container starten
+        run: docker compose up -d --wait
+
+      - name: Container-Suite
+        working-directory: checks
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npx playwright test tests/container.spec.ts
+
+      - name: Report hochladen
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: levelboard-container-report
+          path: checks/.out/playwright.json
+
+      - name: Images in die GHCR pushen
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker compose push
+          for part in frontend backend; do
+            docker tag "$IMAGE_PREFIX-$part:$IMAGE_TAG" "$IMAGE_PREFIX-$part:main"
+            docker push "$IMAGE_PREFIX-$part:main"
+          done
+
+      - name: Container stoppen
+        if: always()
+        run: docker compose down -v

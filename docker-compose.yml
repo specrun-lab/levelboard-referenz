@@ -1,0 +1,35 @@
+# Levelboard als Container (Level 7). Gebaut und gestartet wird nur in der Pipeline, nie lokal.
+# IMAGE_PREFIX z. B. ghcr.io/specrun-lab/levelboard-lauf-006, IMAGE_TAG = Commit-Hash.
+services:
+  backend:
+    build:
+      context: ./backend
+      args:
+        SOURCE_URL: ${SOURCE_URL:-}
+        REVISION: ${IMAGE_TAG:-lokal}
+    image: ${IMAGE_PREFIX:-levelboard}-backend:${IMAGE_TAG:-lokal}
+    environment:
+      RUN_ID: ${RUN_ID:-container}
+    volumes:
+      - levelboard-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/api/health"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        SOURCE_URL: ${SOURCE_URL:-}
+        REVISION: ${IMAGE_TAG:-lokal}
+    image: ${IMAGE_PREFIX:-levelboard}-frontend:${IMAGE_TAG:-lokal}
+    ports:
+      - "8080:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  levelboard-data:
