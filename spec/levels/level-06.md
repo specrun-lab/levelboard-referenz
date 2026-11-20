@@ -31,9 +31,9 @@ Das YAML schreibst du selbst. Diese Punkte sind verbindlich:
 | Auslöser | `push` auf `main` und `workflow_dispatch` |
 | Job | genau ein Job `check`, `runs-on: ubuntu-latest`, `timeout-minutes: 20` |
 | Container | `container: image: ghcr.io/specrun-lab/devcontainer:1` mit `options: --user root` (Container-Jobs brauchen Schreibrechte im Arbeitsordner des Runners) |
-| Umgebung | `GOMODCACHE: /home/dev/go/pkg/mod`, `GOCACHE: /home/dev/.cache/go-build`, `GOFLAGS: -modcacherw`. Als root zeigt `HOME` woanders hin; so werden die vorgehaltenen Go-Module genutzt und nichts muss über den Go-Proxy geladen werden |
-| Schritte | 1. `actions/checkout@v4` · 2. `make level5` · 3. `make check` · 4. Artefakt hochladen |
-| Artefakt | `actions/upload-artifact@v4`, Name **`levelboard-report`**, Inhalt `frontend/dist/results.json` und `checks/.out/playwright.json`, **`if: always()`** (auch wenn `make check` scheitert) |
+| Umgebung | `GOMODCACHE: /home/dev/go/pkg/mod`, `GOCACHE: /home/dev/.cache/go-build`, `GOFLAGS: -modcacherw -buildvcs=false`. Als root zeigt `HOME` woanders hin; so werden die vorgehaltenen Go-Module genutzt und nichts muss über den Go-Proxy geladen werden. `-buildvcs=false` ist nötig, weil Git im Container (root ≠ Eigentümer des Arbeitsordners) die Abfrage verweigert, die `go build` für die Versionsangabe macht („error obtaining VCS status“) |
+| Schritte | 1. `actions/checkout@v7` · 2. `make level5` · 3. `make check` · 4. Artefakt hochladen |
+| Artefakt | `actions/upload-artifact@v7`, Name **`levelboard-report`**, Inhalt `frontend/dist/results.json` und `checks/.out/playwright.json`, **`if: always()`** (auch wenn `make check` scheitert) |
 
 Der Job ist nur grün, wenn `make check` grün ist. In der Pipeline läuft nur **bis Level 5**: Level 6 prüft die Pipeline selbst und gehört nicht hinein.
 

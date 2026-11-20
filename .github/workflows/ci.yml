@@ -18,9 +18,11 @@ jobs:
       # Go-Module und Build-Cache aus dem Image nutzen (als root zeigt HOME woanders hin)
       GOMODCACHE: /home/dev/go/pkg/mod
       GOCACHE: /home/dev/.cache/go-build
-      GOFLAGS: -modcacherw
+      # -buildvcs=false: Git verweigert im Container (root ≠ Eigentümer des Arbeitsordners) die Abfrage,
+      # die go build für die Versionsangabe macht („error obtaining VCS status“)
+      GOFLAGS: -modcacherw -buildvcs=false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Levels 1–5 starten
         run: make level5
@@ -30,7 +32,7 @@ jobs:
 
       - name: Report hochladen
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: levelboard-report
           path: |
