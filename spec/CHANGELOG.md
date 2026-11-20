@@ -2,6 +2,7 @@
 
 ## 1.0.0 – 2026-11-20
 - Neu: **Level 10** (Metriken veröffentlicht): `levels/level-10.md`. Abschnitt „Abschlussbericht“ unter den Karten (`Report.tsx`, `data-testid="report"`); `checks/collect-report.mjs` sammelt Pipeline-Dauer, Image-Größen und Lasttest; `make check` meldet sie als `metrics` von Level 10 und prüft danach live nach (`tests/live-report.spec.ts`); `make level10`; 3 neue Checks.
+- 03: `playwright.config.ts` mit den Projekten `levels` und `level-10` (Level 10 läuft zuletzt).
 - 05: `metrics` von Level 10 = `checks/.out/report.json`.
 - 06: Gestaltung, Texte und `data-testid`s des Abschlussberichts.
 - Damit beschreibt die Spec alle 10 Levels.
