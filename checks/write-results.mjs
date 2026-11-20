@@ -59,7 +59,7 @@ for (const n of levels) {
 }
 
 // Meldet die geprüften Levels aufsteigend an ein Backend; hört nach dem ersten Fehlschlag auf.
-async function report(base, label) {
+async function sendResults(base, label) {
   for (const n of levels) {
     const e = byLevel.get(n);
     const res = await fetch(`${base}/api/levels/${n}/result`, {
@@ -79,6 +79,6 @@ async function report(base, label) {
 
 // Ab Level 5 (REPORT_API=1): ans lokale Backend; ab Level 9 (REPORT_LIVE=1) zusätzlich an die Live-API.
 let apiOk = true;
-if (process.env.REPORT_API === '1') apiOk = await report(process.env.API_URL ?? 'http://127.0.0.1:8081', 'das Backend');
-if (process.env.REPORT_LIVE === '1') apiOk = (await report(process.env.LIVE_URL ?? '', 'die Live-API')) && apiOk;
+if (process.env.REPORT_API === '1') apiOk = await sendResults(process.env.API_URL ?? 'http://127.0.0.1:8081', 'das Backend');
+if (process.env.REPORT_LIVE === '1') apiOk = (await sendResults(process.env.LIVE_URL ?? '', 'die Live-API')) && apiOk;
 process.exit(failedAt === null && apiOk ? 0 : 1);
