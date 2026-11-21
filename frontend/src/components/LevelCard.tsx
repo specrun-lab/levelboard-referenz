@@ -1,4 +1,4 @@
-import { LEVEL_TITLES, STATUS_LABEL, formatDateTime, formatDecimal, formatDuration, formatThousands, tokensOf, type LevelResult } from '../results';
+import { LEVEL_TITLES, STATUS_LABEL, formatDateTime, formatDecimal, formatBuild, formatDuration, formatThousands, tokensOf, type LevelResult } from '../results';
 
 export default function LevelCard({ result }: { result: LevelResult }) {
   const { level, status, checkedAt, durationMs, checks } = result;
@@ -7,6 +7,8 @@ export default function LevelCard({ result }: { result: LevelResult }) {
   const use = tokensOf(result);
   const cost = !use ? '–' : 'inLevel' in use ? `in L${String(use.inLevel).padStart(2, '0')}` : `${formatDecimal(use.tokens.costUsd, 2)} USD`;
   const output = use && 'tokens' in use ? formatThousands(use.tokens.output) : '–';
+  const inLevel = use && 'inLevel' in use ? `in L${String(use.inLevel).padStart(2, '0')}` : null;
+  const build = inLevel ?? (use && 'tokens' in use && typeof use.tokens.buildS === 'number' ? formatBuild(use.tokens.buildS) : '–');
   return (
     <article
       className={`card status-${status}`}
@@ -30,12 +32,16 @@ export default function LevelCard({ result }: { result: LevelResult }) {
           <dd data-testid="level-checked-at">{formatDateTime(checkedAt)}</dd>
         </div>
         <div>
-          <dt>Dauer</dt>
+          <dt>Prüfdauer</dt>
           <dd data-testid="level-duration">{formatDuration(durationMs)}</dd>
         </div>
         <div>
           <dt>Checks</dt>
           <dd data-testid="level-checks">{checks.length ? `${passed}/${checks.length}` : '–'}</dd>
+        </div>
+        <div>
+          <dt>Bauzeit</dt>
+          <dd data-testid="level-build-time">{build}</dd>
         </div>
         <div>
           <dt>Kosten</dt>

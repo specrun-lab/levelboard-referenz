@@ -2,6 +2,7 @@ import {
   LEVEL_COUNT,
   LEVEL_TITLES,
   STATUS_LABEL,
+  formatBuild,
   formatDateTime,
   formatDecimal,
   formatThousands,
@@ -67,6 +68,7 @@ export default function Report({ levels, commit, updatedAt }: { levels: LevelRes
                 <Fact label="Erreicht" testid="report-reached">{reached} / {LEVEL_COUNT}</Fact>
                 <Fact label="Score" testid="report-score">{reached * 10} / 100</Fact>
                 <Fact label="Vollständig" testid="report-complete">{complete ? 'ja' : 'nein'}</Fact>
+                <Fact label="Bauzeit gesamt" testid="report-build-time">{typeof tokens?.buildS === 'number' ? formatBuild(tokens.buildS) : '–'}</Fact>
                 <Fact label="Commit" testid="report-commit">{commit ? commit.slice(0, 7) : '–'}</Fact>
                 <Fact label="Stand" testid="report-time">{formatDateTime(updatedAt)}</Fact>
               </dl>

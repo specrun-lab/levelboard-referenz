@@ -206,6 +206,7 @@ export interface Tokens {
   output: number;
   total: number;
   costUsd: number;
+  buildS?: number;
 }
 export interface Pipeline { runId: number; url: string; jobs: Record<string, number>; totalS: number }
 export interface Images { frontendMB: number; backendMB: number }
@@ -241,7 +242,7 @@ export function loadtestOf(levels: LevelResult[]): Loadtest | null {
 export function tokenSum(levels: LevelResult[]): (Tokens & { phases: number }) | null {
   const list = levels.map(tokensOf).flatMap((x) => (x && 'tokens' in x ? [x.tokens] : []));
   if (list.length === 0) return null;
-  const add = (k: keyof Omit<Tokens, 'models'>) => list.reduce((s, t) => s + t[k], 0);
+  const add = (k: keyof Omit<Tokens, 'models' | 'buildS'>) => list.reduce((s, t) => s + t[k], 0);
   return {
     models: [...new Set(list.flatMap((t) => t.models))].sort(),
     responses: add('responses'),
@@ -252,8 +253,15 @@ export function tokenSum(levels: LevelResult[]): (Tokens & { phases: number }) |
     output: add('output'),
     total: add('total'),
     costUsd: Math.round(add('costUsd') * 100) / 100,
+    buildS: list.every((t) => typeof t.buildS === 'number') ? list.reduce((s, t) => s + (t.buildS ?? 0), 0) : undefined,
     phases: list.length,
   };
+}
+
+/** Bauzeit: 39 → „39 s“, 452 → „7:32 min“ */
+export function formatBuild(s: number): string {
+  if (s < 60) return `${s} s`;
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} min`;
 }
 
 /** 4419802 → „4’419’802“ */

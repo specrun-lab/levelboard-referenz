@@ -148,7 +148,7 @@ Nur geprüfte Levels bekommen einen Eintrag. Ein Level, das schon früher bestan
 ```json
 { "models": ["claude-sonnet-5-5"], "responses": 22, "input": 44, "cacheWrite5m": 0, "cacheWrite1h": 80734,
   "cacheRead": 1302190, "output": 56103, "total": 1439071, "costUsd": 1.2,
-  "from": "2026-11-20T15:57:12.000Z", "until": "2026-11-20T16:04:50.000Z" }
+  "from": "2026-11-20T15:57:12.000Z", "until": "2026-11-20T16:04:44.000Z", "buildS": 452 }
 ```
 | Feld | aus `message.usage` der Antworten der Phase |
 |---|---|
@@ -161,6 +161,7 @@ Nur geprüfte Levels bekommen einen Eintrag. Ein Level, das schon früher bestan
 - Fehlende Werte zählen als 0. `total` ist die Summe der fünf Felder.
 - `models`: alle Modelle der Phase, alphabetisch, ohne Doppelte. `responses`: Anzahl der Antworten.
 - `from` und `until`: `timestamp` der ersten und der letzten Antwort als ISO-Zeit, bei keiner Antwort `null`.
+- `buildS` (**Bauzeit**): Sekunden vom **Beginn** der Phase bis zum `timestamp` ihrer letzten Antwort, also bis zum Start des `make check`, der das Level besteht. Gerundet. Beginn ist der Zeitpunkt der vorigen Grenze; bei der ersten Phase ist es der `timestamp` der ersten Antwort überhaupt. Eine Phase ohne Antworten hat `buildS` = 0. Für die laufende Phase und ein fehlgeschlagenes Level gilt dasselbe, mit Beginn an der letzten Grenze.
 - `costUsd`: Tokens mal Preis des jeweiligen Modells (USD pro Million Tokens), über die Phase summiert und auf 2 Nachkommastellen gerundet. Ein Modell, das nicht in der Tabelle steht, ist ein Fehler.
 
 | Modell | Eingabe | Cache schreiben 5 min | Cache schreiben 1 h | Cache lesen | Ausgabe |

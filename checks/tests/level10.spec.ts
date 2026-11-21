@@ -17,6 +17,7 @@ const OUT = path.resolve(HERE, '../.out');
 const head = () => execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
 const comma = (n: number, digits = 1) => n.toFixed(digits).replace('.', ',');
 const thousands = (n: number) => n.toLocaleString('de-CH');
+const build = (s: number) => (s < 60 ? `${s} s` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} min`);
 const ALL_PASSED = Array.from({ length: 10 }, (_, i) => ({ level: i + 1, status: 'bestanden' }));
 
 /** Ersetzt im Browser die Antwort von /api/levels: Jedes Level bekommt die angegebenen Felder. */
@@ -60,6 +61,7 @@ test.describe('level-10', () => {
     const cost = Math.round(phases.reduce((s, t) => s + t.costUsd, 0) * 100) / 100;
     await expect(page.getByTestId('report-cost')).toHaveText(`${comma(cost, 2)} USD`);
     await expect(page.getByTestId('report-tokens-output')).toHaveText(thousands(phases.reduce((s, t) => s + t.output, 0)));
+    await expect(page.getByTestId('report-build-time')).toHaveText(build(phases.reduce((s, t) => s + t.buildS, 0)));
     await expect(page.getByTestId('report-p95')).toHaveText(`${b.loadtest.p95Ms} ms`);
     await expect(page.getByTestId('report-image-frontend')).toHaveText(`${comma(b.images.frontendMB)} MB`);
     for (const job of ['check', 'images', 'deploy']) await expect(page.getByTestId(`report-job-${job}`)).toHaveText(`${b.pipeline.jobs[job]} s`);
@@ -69,6 +71,7 @@ test.describe('level-10', () => {
       const card = page.locator(`[data-testid="level-card"][data-level="${n}"]`);
       await expect(card.getByTestId('level-cost')).toHaveText(t.inLevel ? `in L${String(t.inLevel).padStart(2, '0')}` : `${comma(t.costUsd, 2)} USD`);
       await expect(card.getByTestId('level-output')).toHaveText(t.inLevel ? '–' : thousands(t.output));
+      await expect(card.getByTestId('level-build-time')).toHaveText(t.inLevel ? `in L${String(t.inLevel).padStart(2, '0')}` : build(t.buildS));
     }
   });
 

@@ -4,6 +4,7 @@ import { test, expect } from '@playwright/test';
 // Prüft, dass die echte Live-Seite den vollständigen Abschlussbericht aus den gemeldeten Levels zeigt.
 const LIVE = process.env.LIVE_URL ?? '';
 const comma = (n: number, digits = 1) => n.toFixed(digits).replace('.', ',');
+const build = (s: number) => (s < 60 ? `${s} s` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} min`);
 
 test.describe('live-bericht', () => {
   test('Live-Seite zeigt den gemeldeten Abschlussbericht', async ({ page, request }) => {
@@ -23,6 +24,7 @@ test.describe('live-bericht', () => {
     await expect(page.getByTestId('report-score')).toHaveText('100 / 100');
     await expect(page.getByTestId('report-commit')).toHaveText(String(body.run.commit).slice(0, 7));
     await expect(page.getByTestId('report-cost')).toHaveText(`${comma(cost, 2)} USD`);
+    await expect(page.getByTestId('report-build-time')).toHaveText(build(phases.reduce((s: number, t: any) => s + t.buildS, 0)));
     await expect(page.getByTestId('report-p95')).toHaveText(`${l9.loadtest.p95Ms} ms`);
     await expect(page.getByTestId('report-image-backend')).toHaveText(`${comma(l7.images.backendMB)} MB`);
     await expect(page.getByTestId('report-pipeline-total')).toHaveText(`${l6.pipeline.totalS} s`);

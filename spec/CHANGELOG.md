@@ -1,5 +1,9 @@
 # Spec-Changelog
 
+## 1.3.0 – 2026-11-21
+- **Bauzeit pro Level:** Das Token-Objekt bekommt `buildS`, also die Sekunden vom Ende der vorigen Phase bis zum Start des `make check`, der das Level besteht (05). Die Karte zeigt sie als neue Zeile „Bauzeit“ (`level-build-time`, `39 s` bzw. `7:32 min`), der Bericht als „Bauzeit gesamt“ (`report-build-time`).
+- 06: Die bisherige Kartenzeile „Dauer“ heißt jetzt „Prüfdauer“ (Inhalt und `level-duration` unverändert).
+
 ## 1.2.0 – 2026-11-21
 - **Kennzahlen bei ihrem Level** (05, neuer Abschnitt „Kennzahlen pro Level“): Jedes geprüfte Level bekommt ab Level 1 `metrics.tokens`, also den Verbrauch seiner Phase aus dem Session-Protokoll. Die Phasengrenzen sind die früheren `make check`. Gemeinsame Phasen stehen beim höchsten Level, die übrigen bekommen `{ "inLevel": n }`. Dazu kommen `pipeline` bei Level 6, `images` bei Level 7 und `loadtest` bei Level 9 (vorher flach in `metrics`). Die Preistabelle steht jetzt in 05.
 - 06: Karten mit „Kosten“ und „Ausgabe“ (`level-cost`, `level-output`). Der **Abschlussbericht ist immer da**, sobald ein Level geprüft ist, und setzt sich aus den Levels zusammen. Fehlende Teile zeigen „noch nicht erreicht“; dazu kommen `data-complete` und „Vollständig“.

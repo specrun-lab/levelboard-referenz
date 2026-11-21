@@ -1,6 +1,6 @@
 # 00 – Start
 
-**Spec-Version:** 1.2.0 (umfasst Level 1–10)
+**Spec-Version:** 1.3.0 (umfasst Level 1–10)
 
 Du baust das **Levelboard**: eine Web-App, die zeigt, wie weit ein Coding-Agent auf einem Pfad aus 10 Levels gekommen ist, und die sich dabei selbst misst. Du bist dieser Agent.
 

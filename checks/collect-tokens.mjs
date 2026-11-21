@@ -109,14 +109,17 @@ export function levelTokens(current, dir = DEFAULT_DIR) {
   const { responses, steps, best } = readProtocol(dir);
   const result = new Map();
   if (responses.length === 0) return result;
-  const assign = (from, to, list) => {
-    result.set(to, sumTokens(list));
+  // Bauzeit: vom Ende der vorigen Phase (bzw. der ersten Antwort) bis zur letzten Antwort der Phase,
+  // also bis zum Start des make check, der das Level besteht
+  const withBuild = (list, start) => ({ ...sumTokens(list), buildS: list.length ? Math.round((list.at(-1).t - start) / 1000) : 0 });
+  const assign = (from, to, list, start) => {
+    result.set(to, withBuild(list, start));
     for (let n = from; n < to; n++) result.set(n, { inLevel: to });
   };
   // Abgeschlossene Phasen aus früheren make check
   let prev = -Infinity;
   for (const s of steps) {
-    assign(s.from, s.to, responses.filter((r) => r.t > prev && r.t <= s.t));
+    assign(s.from, s.to, responses.filter((r) => r.t > prev && r.t <= s.t), prev === -Infinity ? responses[0].t : prev);
     prev = s.t;
   }
   // Laufende Phase: alles nach der letzten Grenze
@@ -127,9 +130,10 @@ export function levelTokens(current, dir = DEFAULT_DIR) {
     reachedNow = l.level;
   }
   const failed = current.find((l) => l.status === 'fehlgeschlagen');
-  if (reachedNow > best) assign(best + 1, reachedNow, rest);
-  else if (failed && failed.level > best) result.set(failed.level, sumTokens(rest));
-  if (failed && failed.level > best && reachedNow > best) result.set(failed.level, sumTokens([]));
+  const restStart = prev === -Infinity ? responses[0].t : prev;
+  if (reachedNow > best) assign(best + 1, reachedNow, rest, restStart);
+  else if (failed && failed.level > best) result.set(failed.level, withBuild(rest, restStart));
+  if (failed && failed.level > best && reachedNow > best) result.set(failed.level, withBuild([], restStart));
   // Nur geprüfte Levels behalten
   const checked = new Set(current.filter((l) => l.status === 'bestanden' || l.status === 'fehlgeschlagen').map((l) => l.level));
   for (const n of [...result.keys()]) if (!checked.has(n)) result.delete(n);

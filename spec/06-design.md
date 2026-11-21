@@ -103,8 +103,9 @@ Dazu `color-scheme: dark` auf `:root`.
   | Beschriftung (`dt`) | Wert (`dd`) |
   |---|---|
   | Geprüft | `checkedAt` im Format `TT.MM.JJJJ, HH:MM`, sonst „–“ |
-  | Dauer | unter 1000 ms: `850 ms` (gerundet), sonst Sekunden mit einer Nachkommastelle und Komma: `2,3 s`; null: „–“ |
+  | Prüfdauer | `durationMs`: unter 1000 ms `850 ms` (gerundet), sonst Sekunden mit einer Nachkommastelle und Komma: `2,3 s`; null: „–“ |
   | Checks | `<bestanden>/<alle>`, z. B. `4/5`; ohne Checks: „–“ |
+  | Bauzeit | `metrics.tokens.buildS`: unter 60 s `39 s`, sonst `M:SS min` (z. B. `7:32 min`); bei `{ "inLevel": n }` `in L0n` (z. B. `in L07`); ohne `tokens` oder ohne `buildS`: „–“ |
   | Kosten | `metrics.tokens.costUsd` als `1,20 USD` (2 Nachkommastellen, Komma); bei `{ "inLevel": n }` `in L0n` (zweistellig, z. B. `in L07`); ohne `tokens`: „–“ |
   | Ausgabe | `metrics.tokens.output` mit Tausendertrennung `toLocaleString('de-CH')`, z. B. `56’103`; bei `inLevel` oder ohne `tokens`: „–“ |
 
@@ -134,6 +135,7 @@ Gefüllt zeigt er **5 Kacheln** in einem Raster (3 Spalten, 16 px Abstand, Reihe
 | Ergebnis | immer | Erreicht | `report-reached` | `<erreichtes Level> / 10` |
 | | | Score | `report-score` | `<erreichtes Level · 10> / 100` |
 | | | Vollständig | `report-complete` | `ja`, wenn Level 10 bestanden ist, sonst `nein` |
+| | | Bauzeit gesamt | `report-build-time` | Summe `buildS` aller Levels mit eigenem Token-Objekt, Format wie „Bauzeit“ der Karte; fehlt `buildS` irgendwo: „–“ |
 | | | Commit | `report-commit` | erste 7 Zeichen von `run.commit`, sonst „–“ |
 | | | Stand | `report-time` | `run.updatedAt`, formatiert wie „Geprüft“ |
 | Tokens | Summe über alle Levels mit eigenem Token-Objekt (nicht `inLevel`) | Modell | `report-model` | alle Modelle, alphabetisch, ohne Doppelte, verbunden mit `, ` |
@@ -176,11 +178,11 @@ Gefüllt zeigt er **5 Kacheln** in einem Raster (3 Spalten, 16 px Abstand, Reihe
 | `level-title` | Titel in der Karte |
 | `level-status` | Abzeichen in der Karte |
 | `level-checked-at` | Wert „Geprüft“ |
-| `level-duration` | Wert „Dauer“ |
+| `level-duration` | Wert „Prüfdauer“ |
 | `level-checks` | Wert „Checks“ |
 | `report` | Abschlussbericht, mit `data-state` `ready` bzw. `empty` und `data-complete` |
 | `report-empty` | Hinweis „Noch kein Abschlussbericht …“ |
 | `report-tokens-missing`, `report-loadtest-missing`, `report-images-missing`, `report-pipeline-missing` | Platzhalter „noch nicht erreicht“ einer Kachel |
-| `level-cost`, `level-output` | Werte „Kosten“ und „Ausgabe“ in der Karte |
-| `report-reached`, `report-score`, `report-complete`, `report-commit`, `report-time`, `report-model`, `report-responses`, `report-tokens-input`, `report-tokens-cache-write`, `report-tokens-cache-read`, `report-tokens-output`, `report-tokens-total`, `report-cost`, `report-p50`, `report-p95`, `report-rps`, `report-errors`, `report-image-frontend`, `report-image-backend`, `report-job-check`, `report-job-images`, `report-job-deploy`, `report-pipeline-total`, `report-pipeline-link` | Werte des Abschlussberichts (siehe oben) |
+| `level-build-time`, `level-cost`, `level-output` | Werte „Bauzeit“, „Kosten“ und „Ausgabe“ in der Karte |
+| `report-reached`, `report-score`, `report-complete`, `report-build-time`, `report-commit`, `report-time`, `report-model`, `report-responses`, `report-tokens-input`, `report-tokens-cache-write`, `report-tokens-cache-read`, `report-tokens-output`, `report-tokens-total`, `report-cost`, `report-p50`, `report-p95`, `report-rps`, `report-errors`, `report-image-frontend`, `report-image-backend`, `report-job-check`, `report-job-images`, `report-job-deploy`, `report-pipeline-total`, `report-pipeline-link` | Werte des Abschlussberichts (siehe oben) |
 | `report-levels`, `report-level` | Liste der Levels im Abschlussbericht, Einträge mit `data-level` und `data-status` |

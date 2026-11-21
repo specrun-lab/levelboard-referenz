@@ -20,7 +20,7 @@ Die Tests 2 und 3 öffnen die **Live-Seite** und ersetzen im Browser die Antwort
 | # | Testtitel | Prüft |
 |---|---|---|
 | 1 | `Alle Teile des Berichts sind vorhanden` | `pipelineOf(GITHUB_REPO, HEAD)` hat die Jobs `check`, `images` und `deploy` mit Dauer > 0; beide Image-Größen > 0; `checks/.out/loadtest.json` hat `requests` > 0; `levelTokens` für „Level 1–10 bestanden“ liefert Einträge für alle 10 Levels. Alles zusammen nach `checks/.out/bericht.json` schreiben: `{ pipeline, images, loadtest, tokens }` mit `tokens` als Objekt Level → Eintrag |
-| 2 | `Vollständiger Bericht wird dargestellt` | Alle Levels ersetzt durch `status: "bestanden"`, `checkedAt`: jetzt, `metrics`: `tokens` aus `bericht.json`, dazu `pipeline` bei Level 6, `images` bei Level 7, `loadtest` bei Level 9. Dann: `report` mit `data-complete="true"`; `report-reached` = `10 / 10`; `report-complete` = `ja`; `report-cost` und `report-tokens-output` = Summen über die Levels mit eigenem Token-Objekt; `report-p95`, `report-image-frontend` und die drei `report-job-*` passend; `report-pipeline-link` mit `href` = `pipeline.url`; in jeder Karte `level-cost` und `level-output` passend zu ihrem Eintrag (Formate in `06-design.md`) |
+| 2 | `Vollständiger Bericht wird dargestellt` | Alle Levels ersetzt durch `status: "bestanden"`, `checkedAt`: jetzt, `metrics`: `tokens` aus `bericht.json`, dazu `pipeline` bei Level 6, `images` bei Level 7, `loadtest` bei Level 9. Dann: `report` mit `data-complete="true"`; `report-reached` = `10 / 10`; `report-complete` = `ja`; `report-cost`, `report-tokens-output` und `report-build-time` = Summen über die Levels mit eigenem Token-Objekt; `report-p95`, `report-image-frontend` und die drei `report-job-*` passend; `report-pipeline-link` mit `href` = `pipeline.url`; in jeder Karte `level-build-time`, `level-cost` und `level-output` passend zu ihrem Eintrag (Formate in `06-design.md`) |
 | 3 | `Teilbericht zeigt fehlende Teile` | Level 1 und 2 ersetzt durch `bestanden` mit einem Token-Objekt aus `bericht.json`, alle übrigen durch `offen` mit `checkedAt: null`, `durationMs: null`, `checks: []`, `metrics: {}`. Dann: `report` mit `data-state="ready"`; `report-reached` = `2 / 10`; `report-complete` = `nein`; `report-pipeline-missing`, `report-images-missing` und `report-loadtest-missing` mit genau dem Text `noch nicht erreicht`; kein `report-tokens-missing` |
 
 ## Nachprüfung: `checks/tests/live-report.spec.ts`
@@ -30,7 +30,7 @@ Kein eigenes Level. Die Datei läuft erst **nach** der Meldung an die Live-API u
   - `report` mit `data-complete="true"`
   - `summary-reached` = `10 / 10`, `report-score` = `100 / 100`
   - `report-commit` = die ersten 7 Zeichen von `run.commit`
-  - `report-cost` = Summe der `costUsd` aus der API
+  - `report-cost` = Summe der `costUsd` aus der API, `report-build-time` = Summe der `buildS`
   - `report-p95`, `report-image-backend` und `report-pipeline-total` passend zur API
   - 10 `report-level` mit `data-status="bestanden"`
 
