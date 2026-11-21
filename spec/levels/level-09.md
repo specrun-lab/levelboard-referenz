@@ -50,13 +50,13 @@ Test 4 meldet absichtlich eine Probe an Level 1 und leert damit live die höhere
 ## Ablauf, den du selbst durchspielen sollst
 1. Dateien anlegen, committen, pushen, auf die Pipeline warten (alle drei Jobs grün, wie in Level 8).
 2. `make level9` und `make check` → Level 1–9 bestanden. Die Ausgabe enthält für jedes Level `… an das Backend gemeldet` und `… an die Live-API gemeldet`.
-3. Kontrolle: `GET <LIVE_URL>/api/levels` zeigt Level 1–9 `bestanden`, und Level 9 hat die Lastwerte in `metrics`.
+3. Kontrolle: `GET <LIVE_URL>/api/levels` zeigt Level 1–9 `bestanden`, und Level 9 hat die Lastwerte in `metrics.loadtest` (siehe `05-datenmodell.md`).
 
 ## Bestanden, wenn (Prüfer)
 1. Level 1–8 sind bestanden.
 2. **Selbstmessung live vorhanden:**
    - Auf der Live-API sind Level 1–9 `bestanden`, und `run.commit` ist der aktuelle Commit.
-   - Level 9 hat genau die 5 Checks dieser Datei und `metrics` mit allen Feldern des Lasttests.
+   - Level 9 hat genau die 5 Checks dieser Datei und `metrics.loadtest` mit allen Feldern des Lasttests.
    - Diese Werte sind plausibel: `connections` 10, `durationS` 30, `errors` 0, `p95Ms` < 1000, `requests` > 0, `p50Ms` ≤ `p95Ms` ≤ `maxMs`.
 3. **Fremdmessung:** Der Prüfer prüft die Live-Seite selbst, mit eigenen Checks und einem eigenen Lasttest mit gleicher Last. Bestanden, wenn alles stimmt, ohne Fehler und mit p95 unter 1 s. Die Abweichung zu deinen Werten wird protokolliert, entscheidet aber nicht.
 4. Lokal meldet `make check` Level 1–9 bestanden und meldet sie an die Live-API.

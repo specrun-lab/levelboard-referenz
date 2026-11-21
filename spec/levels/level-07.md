@@ -6,6 +6,7 @@
 - `backend/Dockerfile`, `backend/.dockerignore`
 - `frontend/Dockerfile`, `frontend/.dockerignore`, `frontend/nginx-container.conf`
 - `docker-compose.yml` im Projektordner
+- ab Level 7 setzt `write-results.mjs` bei Level 7 `metrics.images` (siehe `05-datenmodell.md`, „Kennzahlen pro Level“)
 - Backend liest die Adresse aus `LEVELBOARD_ADDR` (siehe unten)
 - `checks/tests/container.spec.ts` (Container-Suite, läuft nur in der Pipeline)
 - `checks/tests/level7.spec.ts` (lokale Checks, fragen GitHub und die GHCR ab)

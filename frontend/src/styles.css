@@ -368,6 +368,12 @@ dd {
   white-space: nowrap;
 }
 
+.report-missing {
+  margin: 0;
+  font-size: 13px;
+  color: var(--faint);
+}
+
 .report-link {
   margin-top: 6px;
   font-size: 13px;

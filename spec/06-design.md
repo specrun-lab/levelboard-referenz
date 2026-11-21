@@ -40,7 +40,7 @@ Dazu `color-scheme: dark` auf `:root`.
     [Hinweis]       – nur bei data-state missing/invalid/unavailable
     [Zusammenfassung]
     [Raster mit 10 Karten]
-    [Abschlussbericht]  – ab Level 10, immer vorhanden (leer oder gefüllt)
+    [Abschlussbericht]  – immer vorhanden (leer oder gefüllt)
   </main>
 </div>
 ```
@@ -105,6 +105,8 @@ Dazu `color-scheme: dark` auf `:root`.
   | Geprüft | `checkedAt` im Format `TT.MM.JJJJ, HH:MM`, sonst „–“ |
   | Dauer | unter 1000 ms: `850 ms` (gerundet), sonst Sekunden mit einer Nachkommastelle und Komma: `2,3 s`; null: „–“ |
   | Checks | `<bestanden>/<alle>`, z. B. `4/5`; ohne Checks: „–“ |
+  | Kosten | `metrics.tokens.costUsd` als `1,20 USD` (2 Nachkommastellen, Komma); bei `{ "inLevel": n }` `in L0n` (zweistellig, z. B. `in L07`); ohne `tokens`: „–“ |
+  | Ausgabe | `metrics.tokens.output` mit Tausendertrennung `toLocaleString('de-CH')`, z. B. `56’103`; bei `inLevel` oder ohne `tokens`: „–“ |
 
 ## Responsiv
 | Breite | Anpassung |
@@ -115,40 +117,45 @@ Dazu `color-scheme: dark` auf `:root`.
 
 Bei 375 px Breite darf es kein horizontales Scrollen geben.
 
-## Abschlussbericht (ab Level 10)
-Ein Abschnitt unter dem Raster: `<section aria-label="Abschlussbericht" data-testid="report" data-state="ready|empty">`. Er ist gestaltet wie die Zusammenfassung: `--surface`, 1 px `--border`, `--radius`, Innenabstand 24 px, Spalten-Flexbox mit 16 px Abstand. Oben steht die Überschrift `<h2>` „Abschlussbericht“ (16 px, Gewicht 600).
+## Abschlussbericht
+Ein Abschnitt unter dem Raster: `<section aria-label="Abschlussbericht" data-testid="report" data-state="ready|empty" data-complete="true|false">`. Er ist gestaltet wie die Zusammenfassung: `--surface`, 1 px `--border`, `--radius`, Innenabstand 24 px, Spalten-Flexbox mit 16 px Abstand. Oben steht die Überschrift `<h2>` „Abschlussbericht“ (16 px, Gewicht 600).
 
-**Gefüllt (`ready`)**, wenn Level 10 den Status `bestanden` oder `fehlgeschlagen` hat **und** seine `metrics` vollständig sind, also alle Zahlen und die URL aus `levels/level-10.md` enthalten. Sonst ist er **leer (`empty`)** und zeigt nur `<p data-testid="report-empty">` mit genau dem Text `Noch kein Abschlussbericht – er erscheint, sobald Level 10 gemeldet ist.` in `--muted`, 14 px.
+Der Bericht hat **keine eigenen Daten**, er setzt sich aus den Levels zusammen (siehe `05-datenmodell.md`, „Kennzahlen pro Level“).
+- **Leer (`empty`)**, solange kein Level geprüft ist, also kein Level ein `checkedAt` hat. Dann zeigt er nur `<p data-testid="report-empty">` mit genau dem Text `Noch kein Abschlussbericht – er erscheint, sobald das erste Level geprüft ist.` in `--muted`, 14 px.
+- Sonst ist er **gefüllt (`ready`)**.
+- `data-complete` ist `true`, wenn Level 10 `bestanden` ist, sonst `false`.
 
-Gefüllt zeigt er zuerst **5 Kacheln** in einem Raster (3 Spalten, 16 px Abstand; Reihenfolge wie in der Tabelle), danach eine **Liste der 10 Levels**.
+Gefüllt zeigt er **5 Kacheln** in einem Raster (3 Spalten, 16 px Abstand, Reihenfolge wie in der Tabelle) und danach die **Liste der 10 Levels**.
 - Jede Kachel: `--surface-2`, 1 px `--border`, `--radius`, Innenabstand 16 px. Oben ein `<h3>` (12 px, Gewicht 600, `--muted`, Großbuchstaben, `letter-spacing: 0.06em`), darunter eine `<dl>`. Jedes Paar steht in einer Zeile mit `space-between`: `<dt>` 13 px `--muted`, `<dd>` Schrift `--mono` 13 px.
+- Fehlen einer Kachel die Daten, zeigt sie statt der `<dl>` nur `<p data-testid="report-<teil>-missing">noch nicht erreicht</p>` (13 px, `--faint`). `<teil>` ist `tokens`, `loadtest`, `images` bzw. `pipeline`.
 
-| Kachel (`<h3>`) | `<dt>` | `<dd>`, testid | Wert |
-|---|---|---|---|
-| Ergebnis | Erreicht | `report-reached` | `<erreichtes Level> / 10` |
-| | Score | `report-score` | `<erreichtes Level · 10> / 100` |
-| | Commit | `report-commit` | erste 7 Zeichen von `run.commit`, sonst „–“ |
-| | Erstellt | `report-time` | `checkedAt` von Level 10, formatiert wie „Geprüft“ |
-| Tokens | Modell | `report-model` | `tokens.models`, verbunden mit `, ` |
-| | Eingabe | `report-tokens-input` | `tokens.input` mit Tausendertrennung `toLocaleString('de-CH')`, z. B. `4’419’802` |
-| | Cache schreiben | `report-tokens-cache-write` | `cacheWrite5m + cacheWrite1h`, ebenso formatiert |
-| | Cache lesen | `report-tokens-cache-read` | `tokens.cacheRead`, ebenso |
-| | Ausgabe | `report-tokens-output` | `tokens.output`, ebenso |
-| | Gesamt | `report-tokens-total` | `tokens.total`, ebenso |
-| | Kosten (API-Preis) | `report-cost` | `<costUsd> USD` mit genau 2 Nachkommastellen und Komma, z. B. `1,60 USD` |
-| | Session | `report-session` | `<sessionS / 60, gerundet> min` |
-| Lasttest | p50 | `report-p50` | `<p50Ms> ms` |
-| | p95 | `report-p95` | `<p95Ms> ms` |
-| | Durchsatz | `report-rps` | `<rps> Anfragen/s` mit genau 1 Nachkommastelle und Komma, z. B. `172,8 Anfragen/s` |
-| | Fehler | `report-errors` | `<errors>` |
-| Images | Frontend | `report-image-frontend` | `<frontendMB> MB`, 1 Nachkommastelle mit Komma, z. B. `25,2 MB` |
-| | Backend | `report-image-backend` | `<backendMB> MB`, ebenso |
-| Pipeline | check | `report-job-check` | `<jobs.check> s` |
-| | images | `report-job-images` | `<jobs.images> s` |
-| | deploy | `report-job-deploy` | `<jobs.deploy> s` |
-| | Gesamt | `report-pipeline-total` | `<totalS> s` |
+| Kachel (`<h3>`) | Daten | `<dt>` | `<dd>`, testid | Wert |
+|---|---|---|---|---|
+| Ergebnis | immer | Erreicht | `report-reached` | `<erreichtes Level> / 10` |
+| | | Score | `report-score` | `<erreichtes Level · 10> / 100` |
+| | | Vollständig | `report-complete` | `ja`, wenn Level 10 bestanden ist, sonst `nein` |
+| | | Commit | `report-commit` | erste 7 Zeichen von `run.commit`, sonst „–“ |
+| | | Stand | `report-time` | `run.updatedAt`, formatiert wie „Geprüft“ |
+| Tokens | Summe über alle Levels mit eigenem Token-Objekt (nicht `inLevel`) | Modell | `report-model` | alle Modelle, alphabetisch, ohne Doppelte, verbunden mit `, ` |
+| | | Antworten | `report-responses` | Summe `responses`, Tausendertrennung `toLocaleString('de-CH')` |
+| | | Eingabe | `report-tokens-input` | Summe `input`, ebenso |
+| | | Cache schreiben | `report-tokens-cache-write` | Summe `cacheWrite5m + cacheWrite1h`, ebenso |
+| | | Cache lesen | `report-tokens-cache-read` | Summe `cacheRead`, ebenso |
+| | | Ausgabe | `report-tokens-output` | Summe `output`, ebenso |
+| | | Gesamt | `report-tokens-total` | Summe `total`, ebenso |
+| | | Kosten (API-Preis) | `report-cost` | Summe der `costUsd` der Levels, auf 2 Nachkommastellen gerundet, als `1,61 USD` |
+| Lasttest | `metrics.loadtest` von Level 9 | p50 | `report-p50` | `<p50Ms> ms` |
+| | | p95 | `report-p95` | `<p95Ms> ms` |
+| | | Durchsatz | `report-rps` | `<rps> Anfragen/s` mit 1 Nachkommastelle und Komma |
+| | | Fehler | `report-errors` | `<errors>` |
+| Images | `metrics.images` von Level 7 | Frontend | `report-image-frontend` | `<frontendMB> MB`, 1 Nachkommastelle mit Komma |
+| | | Backend | `report-image-backend` | `<backendMB> MB`, ebenso |
+| Pipeline | `metrics.pipeline` von Level 6 | check | `report-job-check` | `<jobs.check> s`; fehlt der Job: „–“ |
+| | | images | `report-job-images` | `<jobs.images> s`; ebenso |
+| | | deploy | `report-job-deploy` | `<jobs.deploy> s`; ebenso |
+| | | Gesamt | `report-pipeline-total` | `<totalS> s` |
 
-- In der Kachel „Pipeline“ steht unter der `<dl>` zusätzlich ein Link `<a data-testid="report-pipeline-link" href="<pipeline.url>" target="_blank" rel="noreferrer">` mit dem Text „Lauf ansehen“ in `--accent`, 13 px.
+- In der Kachel „Pipeline“ steht unter der `<dl>` ein Link `<a data-testid="report-pipeline-link" href="<pipeline.url>" target="_blank" rel="noreferrer">` mit dem Text „Lauf ansehen“ in `--accent`, 13 px.
 - **Liste:** `<ol data-testid="report-levels">` ohne Aufzählungszeichen, mit 10 `<li data-testid="report-level" data-level="<n>" data-status="<status>">`.
   - Jede Zeile ist ein Raster mit den Spalten `1fr 140px 160px`, 12 px Abstand, Innenabstand 6 px / 0, oben 1 px `--border`, 13 px.
   - Inhalt: `L<nn> <Titel>` (z. B. `L01 Statische Seite`), dann der Status wie im Abzeichen in der Farbe `--st-<status>`, dann `checkedAt` formatiert wie „Geprüft“ in `--mono` und `--muted`, rechtsbündig.
@@ -171,7 +178,9 @@ Gefüllt zeigt er zuerst **5 Kacheln** in einem Raster (3 Spalten, 16 px Abstand
 | `level-checked-at` | Wert „Geprüft“ |
 | `level-duration` | Wert „Dauer“ |
 | `level-checks` | Wert „Checks“ |
-| `report` | Abschlussbericht, mit `data-state` `ready` bzw. `empty` (ab Level 10) |
+| `report` | Abschlussbericht, mit `data-state` `ready` bzw. `empty` und `data-complete` |
 | `report-empty` | Hinweis „Noch kein Abschlussbericht …“ |
-| `report-reached`, `report-score`, `report-commit`, `report-time`, `report-model`, `report-tokens-input`, `report-tokens-cache-write`, `report-tokens-cache-read`, `report-tokens-output`, `report-tokens-total`, `report-cost`, `report-session`, `report-p50`, `report-p95`, `report-rps`, `report-errors`, `report-image-frontend`, `report-image-backend`, `report-job-check`, `report-job-images`, `report-job-deploy`, `report-pipeline-total`, `report-pipeline-link` | Werte des Abschlussberichts (siehe oben) |
+| `report-tokens-missing`, `report-loadtest-missing`, `report-images-missing`, `report-pipeline-missing` | Platzhalter „noch nicht erreicht“ einer Kachel |
+| `level-cost`, `level-output` | Werte „Kosten“ und „Ausgabe“ in der Karte |
+| `report-reached`, `report-score`, `report-complete`, `report-commit`, `report-time`, `report-model`, `report-responses`, `report-tokens-input`, `report-tokens-cache-write`, `report-tokens-cache-read`, `report-tokens-output`, `report-tokens-total`, `report-cost`, `report-p50`, `report-p95`, `report-rps`, `report-errors`, `report-image-frontend`, `report-image-backend`, `report-job-check`, `report-job-images`, `report-job-deploy`, `report-pipeline-total`, `report-pipeline-link` | Werte des Abschlussberichts (siehe oben) |
 | `report-levels`, `report-level` | Liste der Levels im Abschlussbericht, Einträge mit `data-level` und `data-status` |

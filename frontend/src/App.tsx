@@ -49,7 +49,7 @@ export default function App() {
             <LevelCard key={l.level} result={l} />
           ))}
         </section>
-        <Report levels={results.levels} commit={results.run.commit} />
+        <Report levels={results.levels} commit={results.run.commit} updatedAt={results.run.updatedAt} />
       </main>
     </div>
   );

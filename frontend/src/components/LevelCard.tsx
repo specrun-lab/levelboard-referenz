@@ -1,8 +1,12 @@
-import { LEVEL_TITLES, STATUS_LABEL, formatDateTime, formatDuration, type LevelResult } from '../results';
+import { LEVEL_TITLES, STATUS_LABEL, formatDateTime, formatDecimal, formatDuration, formatThousands, tokensOf, type LevelResult } from '../results';
 
 export default function LevelCard({ result }: { result: LevelResult }) {
   const { level, status, checkedAt, durationMs, checks } = result;
   const passed = checks.filter((c) => c.ok).length;
+  // Verbrauch der Phase (ab Spec 1.2.0): eigene Werte, „in L07“ bei gemeinsamer Phase, sonst „–“
+  const use = tokensOf(result);
+  const cost = !use ? '–' : 'inLevel' in use ? `in L${String(use.inLevel).padStart(2, '0')}` : `${formatDecimal(use.tokens.costUsd, 2)} USD`;
+  const output = use && 'tokens' in use ? formatThousands(use.tokens.output) : '–';
   return (
     <article
       className={`card status-${status}`}
@@ -32,6 +36,14 @@ export default function LevelCard({ result }: { result: LevelResult }) {
         <div>
           <dt>Checks</dt>
           <dd data-testid="level-checks">{checks.length ? `${passed}/${checks.length}` : '–'}</dd>
+        </div>
+        <div>
+          <dt>Kosten</dt>
+          <dd data-testid="level-cost">{cost}</dd>
+        </div>
+        <div>
+          <dt>Ausgabe</dt>
+          <dd data-testid="level-output">{output}</dd>
         </div>
       </dl>
     </article>

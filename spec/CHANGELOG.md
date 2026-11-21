@@ -1,5 +1,11 @@
 # Spec-Changelog
 
+## 1.2.0 – 2026-11-21
+- **Kennzahlen bei ihrem Level** (05, neuer Abschnitt „Kennzahlen pro Level“): Jedes geprüfte Level bekommt ab Level 1 `metrics.tokens`, also den Verbrauch seiner Phase aus dem Session-Protokoll. Die Phasengrenzen sind die früheren `make check`. Gemeinsame Phasen stehen beim höchsten Level, die übrigen bekommen `{ "inLevel": n }`. Dazu kommen `pipeline` bei Level 6, `images` bei Level 7 und `loadtest` bei Level 9 (vorher flach in `metrics`). Die Preistabelle steht jetzt in 05.
+- 06: Karten mit „Kosten“ und „Ausgabe“ (`level-cost`, `level-output`). Der **Abschlussbericht ist immer da**, sobald ein Level geprüft ist, und setzt sich aus den Levels zusammen. Fehlende Teile zeigen „noch nicht erreicht“; dazu kommen `data-complete` und „Vollständig“.
+- Level 10 heißt jetzt „Bericht vollständig und live“. Die Tests sind neu: `Alle Teile des Berichts sind vorhanden`, `Vollständiger Bericht wird dargestellt`, `Teilbericht zeigt fehlende Teile`. Es gibt kein eigenes `metrics`-Format für Level 10 mehr.
+- 03: `collect-tokens.mjs` ab Level 1, `collect-report.mjs` ab Level 6; `write-results.mjs` bekommt `GITHUB_REPO` und `RUN_ID`.
+
 ## 1.1.0 – 2026-11-21
 - Level 10: Der Abschlussbericht zeigt zusätzlich den **Token-Verbrauch** der eigenen Claude-Code-Session und die **geschätzten Kosten** zum API-Preis. Neu sind `checks/collect-tokens.mjs` (liest `~/.claude/projects/**/*.jsonl`), das Feld `tokens` in den `metrics` von Level 10, die Preistabelle in `levels/level-10.md` und die Kachel „Tokens“ (5 Kacheln in 3 Spalten).
 - 02: Hinweis auf die Session-Protokolle unter `~/.claude/projects`.

@@ -28,7 +28,7 @@ Feldregeln:
 - Zeitangaben sind ISO-8601 in UTC (`new Date().toISOString()`).
 - `durationMs` ist eine ganze Zahl.
 - Ein Level mit Status `offen` oder `gesperrt` hat `checkedAt: null`, `durationMs: null`, `checks: []`.
-- `metrics` ist `{}`, außer bei Level 9 (Werte des Lasttests, siehe `levels/level-09.md`) und Level 10 (Kennzahlen des Abschlussberichts, siehe `levels/level-10.md`).
+- `metrics` enthält die Kennzahlen des Levels, siehe „Kennzahlen pro Level“ unten. Ein Level ohne Kennzahlen hat `{}`.
 
 ## Startzustand: `frontend/public/results.json`
 - `run`: `{ "id": "lokal", "version": "0.1.0", "commit": null, "updatedAt": null }`
@@ -79,7 +79,7 @@ Im Zustand `loading`, `missing`, `invalid` und `unavailable` zeigt die Seite den
 ## Melden an das Backend (ab Level 5) und an die Live-API (ab Level 9)
 `write-results.mjs` meldet zusätzlich ans Backend, wenn die Umgebungsvariable `REPORT_API=1` gesetzt ist. `make check` setzt sie ab Level 5. Ab Level 9 setzt `make check` außerdem `REPORT_LIVE=1` und `LIVE_URL`: Dann meldet es nach dem lokalen Backend **zusätzlich** an `<LIVE_URL>`, nach denselben Regeln. Dort lauten die Zeilen `Level <n> an die Live-API gemeldet` bzw. `Meldung an die Live-API für Level <n> fehlgeschlagen: <status> <text>`. Ablauf:
 1. Zuerst wie oben `frontend/dist/results.json` schreiben und die Zeilen `Level <n>: …` ausgeben.
-2. Dann für die angegebenen Levels **aufsteigend** je `POST <API_URL>/api/levels/<n>/result` mit `{"checks": [...], "durationMs": <dauer>, "metrics": <metrics>}`. `metrics` ist `{}`, bei Level 9 der Inhalt von `checks/.out/loadtest.json`, bei Level 10 der von `checks/.out/report.json` (fehlt die Datei: `{}`). `API_URL` ist Standard `http://127.0.0.1:8081`; die Checks und die Dauer sind dieselben wie in `results.json`.
+2. Dann für die angegebenen Levels **aufsteigend** je `POST <API_URL>/api/levels/<n>/result` mit `{"checks": [...], "durationMs": <dauer>, "metrics": <metrics>}`. `metrics` ist dasselbe Objekt wie in `results.json` (siehe „Kennzahlen pro Level“). `API_URL` ist Standard `http://127.0.0.1:8081`; die Checks und die Dauer sind dieselben wie in `results.json`.
 3. Nach jeder erfolgreichen Meldung die Zeile `Level <n> an das Backend gemeldet` ausgeben.
 4. Nach einem Level mit nicht bestandenem Check **aufhören**, weil höhere Meldungen ohnehin 409 ergäben.
 5. Antwortet das Backend nicht mit 200, die Zeile `Meldung an das Backend für Level <n> fehlgeschlagen: <status> <text>` ausgeben und aufhören.
@@ -98,7 +98,7 @@ Aufruf: `node write-results.mjs <level> [<level> …]`, z. B. `node write-result
    - `checkedAt`: jetzt
    - `durationMs`: die Dauer aus Schritt 2
    - `checks`: die gesammelten Checks
-   - `metrics`: `{}`, bei Level 9 der Inhalt von `checks/.out/loadtest.json`, bei Level 10 der von `checks/.out/report.json` (fehlt die Datei: `{}`)
+   - `metrics`: siehe „Kennzahlen pro Level“ (wird nach dem Status aller Levels bestimmt)
 5. Alle übrigen Levels **oberhalb des kleinsten angegebenen Levels** werden gesetzt auf:
    - `gesperrt`, wenn ein Level fehlgeschlagen ist,
    - sonst `offen`,
@@ -109,6 +109,67 @@ Aufruf: `node write-results.mjs <level> [<level> …]`, z. B. `node write-result
 8. Gibt pro angegebenem Level eine Zeile aus: `Level <n>: <status> (x/y Checks)`, bzw. ohne Klammer, wenn das Level keine Checks hat. Endet mit Exit-Code 0, wenn kein Level fehlgeschlagen ist, sonst 1.
 
 `vite preview` liefert die geänderte Datei sofort aus. Nach einem Neuladen zeigt die Seite das neue Ergebnis.
+
+## Kennzahlen pro Level (`metrics`)
+`write-results.mjs` setzt `metrics` für jedes geprüfte Level (`bestanden` oder `fehlgeschlagen`), nachdem der Status aller Levels feststeht. Alle anderen Levels bekommen `{}`.
+
+| Feld | bei | gesetzt, wenn | Inhalt |
+|---|---|---|---|
+| `tokens` | jedem geprüften Level, ab Level 1 | das Session-Protokoll lesbar ist | Verbrauch der Phase, siehe unten |
+| `pipeline` | Level 6 | Level 6 bestanden | `pipelineOf(GITHUB_REPO, HEAD)` aus `checks/collect-report.mjs` |
+| `images` | Level 7 | Level 7 bestanden | `{ frontendMB, backendMB }` über `imageSizeMB(…)` aus `checks/collect-report.mjs` |
+| `loadtest` | Level 9 | Level 9 bestanden und `checks/.out/loadtest.json` vorhanden | Inhalt dieser Datei |
+
+Kann eine Kennzahl nicht ermittelt werden (z. B. kein Protokoll oder `gh` nicht erreichbar), fehlt nur dieses Feld. `write-results.mjs` gibt dann eine Zeile mit dem Grund aus und arbeitet weiter.
+
+`checks/collect-report.mjs` (ab Level 6) exportiert:
+- `pipelineOf(repo, sha)`: Lauf von `CI` für `sha` auf `main` (`gh api repos/<repo>/actions/workflows/ci.yml/runs?branch=main&head_sha=<sha>&per_page=1`). Ergebnis: `{ runId, url, jobs, totalS }` mit `runId` = `id`, `url` = `html_url`, `jobs` = Objekt Jobname → Sekunden von `started_at` bis `completed_at` (gerundet, nur abgeschlossene Jobs) und `totalS` = Sekunden von `run_started_at` bis zum spätesten `completed_at`, gerundet.
+- `async imageSizeMB(name, tag)`: Image `ghcr.io/<name>:<tag>` ohne Anmeldung gelesen, wie in Level 7. Bei einem Index gilt der Eintrag `linux/amd64`. Wert: Summe der `size` aller `layers`, geteilt durch 1024 · 1024, auf 1 Nachkommastelle gerundet.
+
+### Verbrauch pro Level: `checks/collect-tokens.mjs` (ab Level 1)
+Claude Code legt die Protokolle deiner Session unter `~/.claude/projects/` ab (`*.jsonl`, auch in Unterordnern). Daraus ermittelt das Modul den Verbrauch je Level. Es exportiert mindestens `levelTokens(current, dir)`; `current` ist der Status je geprüftem Level dieses Laufs, aufsteigend. Ergebnis: je Level ein Token-Objekt oder `{ "inLevel": n }`.
+
+**Protokoll lesen.** Jede Zeile ist ein JSON-Objekt; ungültige Zeilen überspringen.
+- **Antworten:** Zeilen mit `type: "assistant"` und `message.usage`. Jede `message.id` zählt nur einmal (die erste Zeile gilt). `message.model` = `<synthetic>` zählt nicht. Zeitpunkt ist `timestamp`.
+- **Befehle:** In den Antworten die Blöcke `content[]` mit `type: "tool_use"` und `name: "Bash"`, gemerkt als `id` → `input.command`.
+- **Ausgaben:** Zeilen mit `type: "user"`:
+  - Hat die Zeile `toolUseResult` mit `stdout` oder `stderr`, ist die Ausgabe `stdout + "\n" + stderr`. Sie gehört zu `tool_use_id` des ersten Blocks `tool_result` in `message.content`.
+  - Enthält der Text der Zeile `<task-notification>`, ist er die Ausgabe des Befehls mit der `id` aus `<tool-use-id>…</tool-use-id>` (Hintergrundbefehle).
+
+**Phasengrenzen.** Die Ausgaben werden nach Zeit sortiert. Es zählen nur Ausgaben von Befehlen, die `make check` enthalten (Muster `make\s+check\b`). Für jede solche Ausgabe ist das erreichte Level das höchste `n`, für das `Level 1: bestanden` … `Level n: bestanden` alle darin vorkommen. Liegt es über dem bisher besten, entsteht eine Grenze `{ t, from: best + 1, to: n }`.
+
+**Phasen.** Eine Phase umfasst alle Antworten nach der vorigen Grenze bis einschließlich ihrer eigenen. Ihr Verbrauch gehört zum Level `to`; die Levels `from` bis `to − 1` bekommen `{ "inLevel": to }`. Danach kommt die laufende Phase, also alle Antworten nach der letzten Grenze:
+- Erreicht dieser Lauf (`current`) ein höheres Level als das beste bisher, gehört sie zu diesem Level. Die neuen Levels darunter bekommen `{ "inLevel": … }`, und ein fehlgeschlagenes Level darüber bekommt ein Token-Objekt mit lauter Nullen.
+- Sonst gehört sie zum fehlgeschlagenen Level dieses Laufs, falls es über dem besten liegt.
+
+Nur geprüfte Levels bekommen einen Eintrag. Ein Level, das schon früher bestanden wurde, behält so seinen Wert, auch über spätere `make check` hinweg.
+
+**Token-Objekt:**
+```json
+{ "models": ["claude-sonnet-5-5"], "responses": 22, "input": 44, "cacheWrite5m": 0, "cacheWrite1h": 80734,
+  "cacheRead": 1302190, "output": 56103, "total": 1439071, "costUsd": 1.2,
+  "from": "2026-11-20T15:57:12.000Z", "until": "2026-11-20T16:04:50.000Z" }
+```
+| Feld | aus `message.usage` der Antworten der Phase |
+|---|---|
+| `input` | Summe `input_tokens` |
+| `cacheWrite1h` | Summe `cache_creation.ephemeral_1h_input_tokens` (fehlt `cache_creation`: 0) |
+| `cacheWrite5m` | Summe `cache_creation.ephemeral_5m_input_tokens`; fehlt `cache_creation`, dann `cache_creation_input_tokens` |
+| `cacheRead` | Summe `cache_read_input_tokens` |
+| `output` | Summe `output_tokens` |
+
+- Fehlende Werte zählen als 0. `total` ist die Summe der fünf Felder.
+- `models`: alle Modelle der Phase, alphabetisch, ohne Doppelte. `responses`: Anzahl der Antworten.
+- `from` und `until`: `timestamp` der ersten und der letzten Antwort als ISO-Zeit, bei keiner Antwort `null`.
+- `costUsd`: Tokens mal Preis des jeweiligen Modells (USD pro Million Tokens), über die Phase summiert und auf 2 Nachkommastellen gerundet. Ein Modell, das nicht in der Tabelle steht, ist ein Fehler.
+
+| Modell | Eingabe | Cache schreiben 5 min | Cache schreiben 1 h | Cache lesen | Ausgabe |
+|---|---|---|---|---|---|
+| `claude-opus-5-5` | 4 | 5 | 8 | 0.2 | 20 |
+| `claude-sonnet-5-5` | 2 | 2.5 | 4 | 0.1 | 10 |
+| `claude-haiku-5-5` | 0.1 | 0.125 | 0.2 | 0.01 | 0.5 |
+
+Gibt es kein Protokoll oder keine Antwort, bekommt kein Level `tokens`. Was nach dem letzten `make check` noch verbraucht wird, steht in keinem Level.
 
 ## Datenbank (ab Level 4)
 Das Backend speichert in einer SQLite-Datei (Pfad aus `LEVELBOARD_DB`, Standard `.run/levelboard.db`). Das Schema ist **exakt** so anzulegen, mit Spalten in dieser Reihenfolge:

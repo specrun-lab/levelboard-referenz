@@ -37,6 +37,9 @@ Das YAML schreibst du selbst. Diese Punkte sind verbindlich:
 
 Der Job ist nur grün, wenn `make check` grün ist. In der Pipeline läuft nur **bis Level 5**: Level 6 prüft die Pipeline selbst und gehört nicht hinein. Ab Level 7 kommt ein zweiter Job `images` dazu (siehe `level-07.md`); der Job `check` bleibt unverändert.
 
+## Kennzahl
+Ab Level 6 setzt `write-results.mjs` bei Level 6 `metrics.pipeline` mit `checks/collect-report.mjs` (siehe `05-datenmodell.md`, „Kennzahlen pro Level“). Der Abschlussbericht zeigt daraus die Pipeline-Dauer.
+
 ## Makefile
 - `make level6`: genau wie `make level5`, danach `6` nach `.run/level` und die Ausgabe `Repo: https://github.com/<GITHUB_REPO>`.
 - Make-Variablen: `RUN_ID ?= lokal` und `GITHUB_REPO ?= specrun-lab/levelboard-$(RUN_ID)`. `make check` gibt `GITHUB_REPO` an die Prüfsuite weiter.

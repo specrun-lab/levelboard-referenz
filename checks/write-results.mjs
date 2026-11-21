@@ -4,7 +4,10 @@
 // Aufruf: node write-results.mjs <level> [<level> …]   z. B. node write-results.mjs 1 2
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { levelTokens } from './collect-tokens.mjs';
+import { imageSizeMB, pipelineOf } from './collect-report.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const levels = process.argv.slice(2).map(Number).sort((a, b) => a - b);
@@ -29,12 +32,6 @@ const walk = (suite) => {
 report.suites.forEach(walk);
 for (const [n, e] of byLevel) if (e.checks.length === 0) throw new Error(`Keine Checks für Level ${n} gefunden`);
 
-// metrics: Level 9 = Lasttest (tests/level9.spec.ts), Level 10 = Kennzahlen des Abschlussberichts (tests/level10.spec.ts)
-const METRICS_FILES = { 9: '.out/loadtest.json', 10: '.out/report.json' };
-const metricsOf = (n) => {
-  if (!METRICS_FILES[n]) return {};
-  try { return JSON.parse(fs.readFileSync(path.join(here, METRICS_FILES[n]), 'utf8')); } catch { return {}; }
-};
 
 const now = new Date().toISOString();
 const results = JSON.parse(fs.readFileSync(target, 'utf8'));
@@ -47,11 +44,33 @@ for (const l of results.levels) {
   const e = byLevel.get(l.level);
   if (failedAt === null && e) {
     const passed = e.checks.every((c) => c.ok);
-    Object.assign(l, { status: passed ? 'bestanden' : 'fehlgeschlagen', checkedAt: now, durationMs: Math.round(e.durationMs), checks: e.checks, metrics: metricsOf(l.level) });
+    Object.assign(l, { status: passed ? 'bestanden' : 'fehlgeschlagen', checkedAt: now, durationMs: Math.round(e.durationMs), checks: e.checks, metrics: {} });
     if (!passed) failedAt = l.level;
   } else if (l.level > Math.min(...levels)) {
     Object.assign(l, { status: failedAt !== null ? 'gesperrt' : 'offen', checkedAt: null, durationMs: null, checks: [], metrics: {} });
   }
+}
+
+// Kennzahlen bei ihrem Level (spec/05-datenmodell.md): tokens bei jedem geprüften Level,
+// pipeline bei Level 6, images bei Level 7, loadtest bei Level 9 (jeweils nur, wenn bestanden)
+const current = results.levels.filter((l) => byLevel.has(l.level)).map((l) => ({ level: l.level, status: l.status }));
+let tokens = new Map();
+try { tokens = levelTokens(current); } catch (err) { console.log(`Tokens nicht ermittelbar: ${err.message}`); }
+const repo = process.env.GITHUB_REPO ?? `specrun-lab/levelboard-${process.env.RUN_ID ?? 'lokal'}`;
+const head = () => execFileSync('git', ['rev-parse', 'HEAD'], { cwd: path.join(here, '..'), encoding: 'utf8' }).trim();
+const readOut = (f) => { try { return JSON.parse(fs.readFileSync(path.join(here, '.out', f), 'utf8')); } catch { return null; } };
+for (const l of results.levels) {
+  if (!byLevel.has(l.level) || (l.status !== 'bestanden' && l.status !== 'fehlgeschlagen')) continue;
+  const m = {};
+  if (tokens.has(l.level)) m.tokens = tokens.get(l.level);
+  if (l.status === 'bestanden') {
+    try {
+      if (l.level === 6) m.pipeline = pipelineOf(repo, head());
+      if (l.level === 7) m.images = { frontendMB: await imageSizeMB(`${repo}-frontend`, head()), backendMB: await imageSizeMB(`${repo}-backend`, head()) };
+    } catch (err) { console.log(`Kennzahlen für Level ${l.level} nicht ermittelbar: ${err.message}`); }
+    if (l.level === 9 && readOut('loadtest.json')) m.loadtest = readOut('loadtest.json');
+  }
+  l.metrics = m;
 }
 
 fs.writeFileSync(target, JSON.stringify(results, null, 2) + '\n');
@@ -68,7 +87,7 @@ async function sendResults(base, label) {
     const res = await fetch(`${base}/api/levels/${n}/result`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ checks: e.checks, durationMs: Math.round(e.durationMs), metrics: metricsOf(n) }),
+      body: JSON.stringify({ checks: e.checks, durationMs: Math.round(e.durationMs), metrics: results.levels[n - 1].metrics }),
     }).catch((err) => ({ ok: false, status: 0, text: async () => String(err) }));
     if (!res.ok) {
       console.log(`Meldung an ${label} für Level ${n} fehlgeschlagen: ${res.status} ${await res.text()}`);

@@ -4,7 +4,7 @@
 
 ## Liefergegenstände
 - `frontend/` vollständig nach `03-architektur.md`, `05-datenmodell.md` und `06-design.md`
-- `checks/` mit `tests/level1.spec.ts` und `write-results.mjs`
+- `checks/` mit `tests/level1.spec.ts`, `write-results.mjs` und `collect-tokens.mjs`: Schon ab Level 1 bekommt jedes geprüfte Level seinen Verbrauch als `metrics.tokens` (siehe `05-datenmodell.md`, „Kennzahlen pro Level“). Die Karten zeigen „Kosten“ und „Ausgabe“, und der Abschlussbericht ist von Anfang an da (siehe `06-design.md`)
 - `Makefile` mit `level1`, `check`, `down`
 - `.gitignore`
 

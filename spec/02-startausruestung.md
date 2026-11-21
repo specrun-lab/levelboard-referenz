@@ -32,5 +32,5 @@ Die Seite auf Port 8080 wird an den Rechner des Benutzers weitergeleitet. Binde 
 | `RUN_ID` | ID des Durchlaufs, z. B. `lauf-006`. Die Prüfsuite schreibt sie in `run.id` (siehe `05-datenmodell.md`); ab Level 6 bestimmt sie den Namen des GitHub-Repos. |
 | `GH_TOKEN` | ab Level 6: Token für die GitHub-Organisation `specrun-lab` (Repos anlegen, pushen, Workflows schreiben, Läufe lesen). `gh` nutzt es automatisch. **Nie** in Dateien, Commits oder Ausgaben schreiben. |
 | `LIVE_DOMAIN` | ab Level 8: Domain des Servers, z. B. `89-67-45-123.sslip.io`. Die Live-Seite eines Laufs liegt unter `https://<RUN_ID>.<LIVE_DOMAIN>` (siehe `levels/level-08.md`). Denselben Wert gibt es in der Pipeline als Org-Variable `vars.LIVE_DOMAIN`. |
-| `HOME` | `/home/dev`. Unter `~/.claude/projects/` legt Claude Code die Protokolle deiner Session ab (`*.jsonl`); ab Level 10 liest du daraus deinen Token-Verbrauch (siehe `levels/level-10.md`). Nur lesen, nie ändern oder löschen. |
+| `HOME` | `/home/dev`. Unter `~/.claude/projects/` legt Claude Code die Protokolle deiner Session ab (`*.jsonl`); schon ab Level 1 liest du daraus deinen Verbrauch pro Level (siehe `05-datenmodell.md`, „Kennzahlen pro Level“). Nur lesen, nie ändern oder löschen. |
 | `PLAYWRIGHT_BROWSERS_PATH` | `/ms-playwright` – vorgegeben, nicht ändern |

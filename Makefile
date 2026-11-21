@@ -130,8 +130,8 @@ restart-backend: stop-backend start-backend
 
 check:
 	cd checks && ([ -d node_modules ] || npm ci) && npx playwright install chromium > /dev/null
-	rm -f checks/.out/loadtest.json checks/.out/report.json
-	cd checks && BASE_URL=$(URL) API_URL=$(API_URL) GITHUB_REPO=$(GITHUB_REPO) LIVE_URL=$(LIVE_URL) npx playwright test $(foreach n,$(LEVELS),tests/level$(n).spec.ts); REPORT_API=$(REPORT_API) API_URL=$(API_URL) REPORT_LIVE=$(REPORT_LIVE) LIVE_URL=$(LIVE_URL) node write-results.mjs $(LEVELS)
+	rm -f checks/.out/loadtest.json
+	cd checks && BASE_URL=$(URL) API_URL=$(API_URL) GITHUB_REPO=$(GITHUB_REPO) LIVE_URL=$(LIVE_URL) npx playwright test $(foreach n,$(LEVELS),tests/level$(n).spec.ts); GITHUB_REPO=$(GITHUB_REPO) RUN_ID=$(RUN_ID) REPORT_API=$(REPORT_API) API_URL=$(API_URL) REPORT_LIVE=$(REPORT_LIVE) LIVE_URL=$(LIVE_URL) node write-results.mjs $(LEVELS)
 	@if [ $(LEVEL) -ge 10 ]; then cd checks && RUN_ID=$(RUN_ID) LIVE_URL=$(LIVE_URL) npx playwright test tests/live-report.spec.ts --reporter=list; fi
 
 down:
