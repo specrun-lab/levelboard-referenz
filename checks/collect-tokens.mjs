@@ -7,11 +7,14 @@ import path from 'node:path';
 
 export const DEFAULT_DIR = path.join(os.homedir(), '.claude', 'projects');
 
-/** USD pro Million Tokens. */
+/** USD pro Million Tokens. `long`: Preise für Anfragen, deren Prompt über `longFrom` Tokens hat (nur Haiku 5.5). */
 export const PRICES = {
   'claude-opus-5-5': { input: 4, write5m: 5, write1h: 8, read: 0.2, output: 20 },
   'claude-sonnet-5-5': { input: 2, write5m: 2.5, write1h: 4, read: 0.1, output: 10 },
-  'claude-haiku-5-5': { input: 0.1, write5m: 0.125, write1h: 0.2, read: 0.01, output: 0.5 },
+  'claude-haiku-5-5': {
+    input: 0.1, write5m: 0.125, write1h: 0.2, read: 0.01, output: 0.5,
+    longFrom: 100_000, long: { input: 0.5, write5m: 0.625, write1h: 1, read: 0.05, output: 2.5 },
+  },
 };
 
 function jsonlFiles(dir) {
@@ -80,13 +83,16 @@ export function sumTokens(list) {
   let cost = 0;
   const models = new Set();
   for (const { model, usage: u } of list) {
-    const price = PRICES[model];
-    if (!price) throw new Error(`kein Preis für Modell ${model}`);
+    const base = PRICES[model];
+    if (!base) throw new Error(`kein Preis für Modell ${model}`);
     models.add(model);
     const w1h = u.cache_creation?.ephemeral_1h_input_tokens ?? 0;
     const w5m = u.cache_creation ? (u.cache_creation.ephemeral_5m_input_tokens ?? 0) : (u.cache_creation_input_tokens ?? 0);
     const r = { input: u.input_tokens ?? 0, cacheWrite5m: w5m, cacheWrite1h: w1h, cacheRead: u.cache_read_input_tokens ?? 0, output: u.output_tokens ?? 0 };
     for (const k of Object.keys(sum)) sum[k] += r[k];
+    // Prompt-Länge der Anfrage = Eingabe + Cache-Schreiben + Cache-Lesen; darüber gilt die teurere Stufe
+    const prompt = r.input + r.cacheWrite5m + r.cacheWrite1h + r.cacheRead;
+    const price = base.long && prompt > base.longFrom ? base.long : base;
     cost += (r.input * price.input + r.cacheWrite5m * price.write5m + r.cacheWrite1h * price.write1h + r.cacheRead * price.read + r.output * price.output) / 1e6;
   }
   return {

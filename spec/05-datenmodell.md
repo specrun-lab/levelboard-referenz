@@ -169,6 +169,9 @@ Nur geprüfte Levels bekommen einen Eintrag. Ein Level, das schon früher bestan
 | `claude-opus-5-5` | 4 | 5 | 8 | 0.2 | 20 |
 | `claude-sonnet-5-5` | 2 | 2.5 | 4 | 0.1 | 10 |
 | `claude-haiku-5-5` | 0.1 | 0.125 | 0.2 | 0.01 | 0.5 |
+| `claude-haiku-5-5`, Prompt über 100’000 Tokens | 0.5 | 0.625 | 1 | 0.05 | 2.5 |
+
+**Preisstufe bei Haiku 5.5:** Abgerechnet wird jede Antwort einzeln. Ihre Prompt-Länge ist `input_tokens + cache_creation_input_tokens + cache_read_input_tokens`, also Eingabe, Cache-Schreiben und Cache-Lesen zusammen. Liegt sie **über 100’000**, gelten für diese Antwort alle Preise der zweiten Haiku-Zeile, auch der für die Ausgabe. Die anderen Modelle haben nur eine Preisstufe.
 
 Gibt es kein Protokoll oder keine Antwort, bekommt kein Level `tokens`. Was nach dem letzten `make check` noch verbraucht wird, steht in keinem Level.
 

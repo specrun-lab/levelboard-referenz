@@ -1,5 +1,8 @@
 # Spec-Changelog
 
+## 1.4.0 – 2026-11-21
+- 05: Preisstufe für Haiku 5.5. Antworten, deren Prompt (Eingabe + Cache-Schreiben + Cache-Lesen) über 100’000 Tokens liegt, kosten $0.50 / $0.625 / $1 / $0.05 / $2.50 pro Mio. Tokens statt des Grundpreises (laut Anthropic-Preisseite). Vorher rechnete die Spec immer mit dem Grundpreis und unterschätzte lange Haiku-Läufe.
+
 ## 1.3.0 – 2026-11-21
 - **Bauzeit pro Level:** Das Token-Objekt bekommt `buildS`, also die Sekunden vom Ende der vorigen Phase bis zum Start des `make check`, der das Level besteht (05). Die Karte zeigt sie als neue Zeile „Bauzeit“ (`level-build-time`, `39 s` bzw. `7:32 min`), der Bericht als „Bauzeit gesamt“ (`report-build-time`).
 - 06: Die bisherige Kartenzeile „Dauer“ heißt jetzt „Checkdauer“, und „Ausgabe“ heißt „Tokens (Ausgabe)“. Inhalte und `data-testid`s bleiben unverändert.
