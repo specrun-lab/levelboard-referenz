@@ -32,7 +32,7 @@ export default function LevelCard({ result }: { result: LevelResult }) {
           <dd data-testid="level-checked-at">{formatDateTime(checkedAt)}</dd>
         </div>
         <div>
-          <dt>Prüfdauer</dt>
+          <dt>Checkdauer</dt>
           <dd data-testid="level-duration">{formatDuration(durationMs)}</dd>
         </div>
         <div>
@@ -48,7 +48,7 @@ export default function LevelCard({ result }: { result: LevelResult }) {
           <dd data-testid="level-cost">{cost}</dd>
         </div>
         <div>
-          <dt>Ausgabe</dt>
+          <dt>Tokens (Ausgabe)</dt>
           <dd data-testid="level-output">{output}</dd>
         </div>
       </dl>
