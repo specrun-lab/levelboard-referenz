@@ -22,6 +22,7 @@ test.describe('live-bericht', () => {
     await expect(page.getByTestId('report-score')).toHaveText('100 / 100');
     await expect(page.getByTestId('report-commit')).toHaveText(String(body.run.commit).slice(0, 7));
     await expect(page.getByTestId('report-p95')).toHaveText(`${report.loadtest.p95Ms} ms`);
+    await expect(page.getByTestId('report-cost')).toHaveText(`${report.tokens.costUsd.toFixed(2).replace('.', ',')} USD`);
     await expect(page.locator('[data-testid="report-level"][data-status="bestanden"]')).toHaveCount(10);
   });
 });

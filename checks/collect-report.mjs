@@ -1,7 +1,8 @@
-// Sammelt die Kennzahlen des Abschlussberichts (Level 10): Pipeline-Dauer, Image-Größen, Lasttest.
+// Sammelt die Kennzahlen des Abschlussberichts (Level 10): Pipeline-Dauer, Image-Größen, Lasttest, Tokens.
 // Als Modul: import { collectReport } from './collect-report.mjs'
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import { collectTokens } from './collect-tokens.mjs';
 
 const gh = (endpoint) => JSON.parse(execFileSync('gh', ['api', endpoint], { encoding: 'utf8', timeout: 60_000 }));
 const ACCEPT = [
@@ -47,7 +48,7 @@ export function pipelineOf(repo, sha) {
 }
 
 /** Alle Kennzahlen; der Lasttest stammt aus .out/loadtest.json (Level 9 im selben make check). */
-export async function collectReport({ repo, sha, loadtestFile }) {
+export async function collectReport({ repo, sha, loadtestFile, projectsDir }) {
   const lt = JSON.parse(fs.readFileSync(loadtestFile, 'utf8'));
   return {
     pipeline: pipelineOf(repo, sha),
@@ -56,5 +57,6 @@ export async function collectReport({ repo, sha, loadtestFile }) {
       backendMB: await imageSizeMB(`${repo}-backend`, sha),
     },
     loadtest: { requests: lt.requests, errors: lt.errors, rps: lt.rps, p50Ms: lt.p50Ms, p95Ms: lt.p95Ms },
+    tokens: collectTokens(projectsDir),
   };
 }

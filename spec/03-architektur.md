@@ -45,6 +45,7 @@ checks/
   report-live.mjs          – ab Level 8, nur in der Pipeline (Job „deploy“)
   loadtest.mjs             – ab Level 9 (Lasttest gegen die Live-Seite)
   collect-report.mjs       – ab Level 10 (Kennzahlen für den Abschlussbericht)
+  collect-tokens.mjs       – ab Level 10 (Token-Verbrauch der eigenen Session)
 backend/                   – ab Level 3: Go-Modul (siehe levels/level-03.md)
   go.mod, go.sum           – ab Level 4 mit modernc.org/sqlite
   Dockerfile, .dockerignore – ab Level 7

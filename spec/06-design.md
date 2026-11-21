@@ -109,7 +109,7 @@ Dazu `color-scheme: dark` auf `:root`.
 ## Responsiv
 | Breite | Anpassung |
 |---|---|
-| ab 1200 px | 5 Spalten; Kacheln des Abschlussberichts in 4 Spalten |
+| ab 1200 px | 5 Spalten; Kacheln des Abschlussberichts in 3 Spalten |
 | 640–1199 px | Raster mit 2 Spalten; Kacheln des Abschlussberichts ebenfalls in 2 Spalten |
 | unter 640 px | Raster mit 1 Spalte und 12 px Abstand; `main` mit 16 px Innenabstand und 16 px Abstand; Kopfzeile mit 0 / 16 px Innenabstand und 16 px Abstand zwischen den Paaren; die `<dt>` der Kopfzeile ausgeblendet; die Paare „Commit“ und „Quelle“ ganz ausgeblendet (die `<dd>` bleiben im DOM); Zusammenfassung untereinander (Spalte, gestreckt) mit 16 px Abstand und 16 px Innenabstand; Abschlussbericht mit 16 px Innenabstand, Kacheln in 1 Spalte mit 12 px Abstand, Liste mit den Spalten `1fr auto` und ohne Zeitpunkt (ausgeblendet) |
 
@@ -120,7 +120,7 @@ Ein Abschnitt unter dem Raster: `<section aria-label="Abschlussbericht" data-tes
 
 **Gefüllt (`ready`)**, wenn Level 10 den Status `bestanden` oder `fehlgeschlagen` hat **und** seine `metrics` vollständig sind, also alle Zahlen und die URL aus `levels/level-10.md` enthalten. Sonst ist er **leer (`empty`)** und zeigt nur `<p data-testid="report-empty">` mit genau dem Text `Noch kein Abschlussbericht – er erscheint, sobald Level 10 gemeldet ist.` in `--muted`, 14 px.
 
-Gefüllt zeigt er zuerst **4 Kacheln** in einem Raster (4 Spalten, 16 px Abstand), danach eine **Liste der 10 Levels**.
+Gefüllt zeigt er zuerst **5 Kacheln** in einem Raster (3 Spalten, 16 px Abstand; Reihenfolge wie in der Tabelle), danach eine **Liste der 10 Levels**.
 - Jede Kachel: `--surface-2`, 1 px `--border`, `--radius`, Innenabstand 16 px. Oben ein `<h3>` (12 px, Gewicht 600, `--muted`, Großbuchstaben, `letter-spacing: 0.06em`), darunter eine `<dl>`. Jedes Paar steht in einer Zeile mit `space-between`: `<dt>` 13 px `--muted`, `<dd>` Schrift `--mono` 13 px.
 
 | Kachel (`<h3>`) | `<dt>` | `<dd>`, testid | Wert |
@@ -129,6 +129,14 @@ Gefüllt zeigt er zuerst **4 Kacheln** in einem Raster (4 Spalten, 16 px Abstand
 | | Score | `report-score` | `<erreichtes Level · 10> / 100` |
 | | Commit | `report-commit` | erste 7 Zeichen von `run.commit`, sonst „–“ |
 | | Erstellt | `report-time` | `checkedAt` von Level 10, formatiert wie „Geprüft“ |
+| Tokens | Modell | `report-model` | `tokens.models`, verbunden mit `, ` |
+| | Eingabe | `report-tokens-input` | `tokens.input` mit Tausendertrennung `toLocaleString('de-CH')`, z. B. `4’419’802` |
+| | Cache schreiben | `report-tokens-cache-write` | `cacheWrite5m + cacheWrite1h`, ebenso formatiert |
+| | Cache lesen | `report-tokens-cache-read` | `tokens.cacheRead`, ebenso |
+| | Ausgabe | `report-tokens-output` | `tokens.output`, ebenso |
+| | Gesamt | `report-tokens-total` | `tokens.total`, ebenso |
+| | Kosten (API-Preis) | `report-cost` | `<costUsd> USD` mit genau 2 Nachkommastellen und Komma, z. B. `1,60 USD` |
+| | Session | `report-session` | `<sessionS / 60, gerundet> min` |
 | Lasttest | p50 | `report-p50` | `<p50Ms> ms` |
 | | p95 | `report-p95` | `<p95Ms> ms` |
 | | Durchsatz | `report-rps` | `<rps> Anfragen/s` mit genau 1 Nachkommastelle und Komma, z. B. `172,8 Anfragen/s` |
@@ -165,5 +173,5 @@ Gefüllt zeigt er zuerst **4 Kacheln** in einem Raster (4 Spalten, 16 px Abstand
 | `level-checks` | Wert „Checks“ |
 | `report` | Abschlussbericht, mit `data-state` `ready` bzw. `empty` (ab Level 10) |
 | `report-empty` | Hinweis „Noch kein Abschlussbericht …“ |
-| `report-reached`, `report-score`, `report-commit`, `report-time`, `report-p50`, `report-p95`, `report-rps`, `report-errors`, `report-image-frontend`, `report-image-backend`, `report-job-check`, `report-job-images`, `report-job-deploy`, `report-pipeline-total`, `report-pipeline-link` | Werte des Abschlussberichts (siehe oben) |
+| `report-reached`, `report-score`, `report-commit`, `report-time`, `report-model`, `report-tokens-input`, `report-tokens-cache-write`, `report-tokens-cache-read`, `report-tokens-output`, `report-tokens-total`, `report-cost`, `report-session`, `report-p50`, `report-p95`, `report-rps`, `report-errors`, `report-image-frontend`, `report-image-backend`, `report-job-check`, `report-job-images`, `report-job-deploy`, `report-pipeline-total`, `report-pipeline-link` | Werte des Abschlussberichts (siehe oben) |
 | `report-levels`, `report-level` | Liste der Levels im Abschlussbericht, Einträge mit `data-level` und `data-status` |

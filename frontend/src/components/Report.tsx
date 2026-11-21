@@ -1,4 +1,4 @@
-import { LEVEL_COUNT, LEVEL_TITLES, STATUS_LABEL, formatDateTime, formatDecimal, parseReport, reachedLevel, type LevelResult } from '../results';
+import { LEVEL_COUNT, LEVEL_TITLES, STATUS_LABEL, formatDateTime, formatDecimal, formatThousands, parseReport, reachedLevel, type LevelResult } from '../results';
 
 function Fact({ label, testid, children }: { label: string; testid: string; children: React.ReactNode }) {
   return (
@@ -32,6 +32,19 @@ export default function Report({ levels, commit }: { levels: LevelResult[]; comm
                 <Fact label="Score" testid="report-score">{reached * 10} / 100</Fact>
                 <Fact label="Commit" testid="report-commit">{commit ? commit.slice(0, 7) : '–'}</Fact>
                 <Fact label="Erstellt" testid="report-time">{formatDateTime(l10.checkedAt)}</Fact>
+              </dl>
+            </div>
+            <div className="report-tile">
+              <h3>Tokens</h3>
+              <dl>
+                <Fact label="Modell" testid="report-model">{report.tokens.models.join(', ')}</Fact>
+                <Fact label="Eingabe" testid="report-tokens-input">{formatThousands(report.tokens.input)}</Fact>
+                <Fact label="Cache schreiben" testid="report-tokens-cache-write">{formatThousands(report.tokens.cacheWrite5m + report.tokens.cacheWrite1h)}</Fact>
+                <Fact label="Cache lesen" testid="report-tokens-cache-read">{formatThousands(report.tokens.cacheRead)}</Fact>
+                <Fact label="Ausgabe" testid="report-tokens-output">{formatThousands(report.tokens.output)}</Fact>
+                <Fact label="Gesamt" testid="report-tokens-total">{formatThousands(report.tokens.total)}</Fact>
+                <Fact label="Kosten (API-Preis)" testid="report-cost">{formatDecimal(report.tokens.costUsd, 2)} USD</Fact>
+                <Fact label="Session" testid="report-session">{Math.round(report.tokens.sessionS / 60)} min</Fact>
               </dl>
             </div>
             <div className="report-tile">

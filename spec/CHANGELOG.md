@@ -1,5 +1,9 @@
 # Spec-Changelog
 
+## 1.1.0 – 2026-11-21
+- Level 10: Der Abschlussbericht zeigt zusätzlich den **Token-Verbrauch** der eigenen Claude-Code-Session und die **geschätzten Kosten** zum API-Preis. Neu sind `checks/collect-tokens.mjs` (liest `~/.claude/projects/**/*.jsonl`), das Feld `tokens` in den `metrics` von Level 10, die Preistabelle in `levels/level-10.md` und die Kachel „Tokens“ (5 Kacheln in 3 Spalten).
+- 02: Hinweis auf die Session-Protokolle unter `~/.claude/projects`.
+
 ## 1.0.0 – 2026-11-20
 - Neu: **Level 10** (Metriken veröffentlicht): `levels/level-10.md`. Abschnitt „Abschlussbericht“ unter den Karten (`Report.tsx`, `data-testid="report"`); `checks/collect-report.mjs` sammelt Pipeline-Dauer, Image-Größen und Lasttest; `make check` meldet sie als `metrics` von Level 10 und prüft danach live nach (`tests/live-report.spec.ts`); `make level10`; 3 neue Checks.
 - 03: `playwright.config.ts` mit den Projekten `levels`, `level-10` (läuft zuletzt) und `weitere`.

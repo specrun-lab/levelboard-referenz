@@ -15,7 +15,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '../..');
 const OUT = path.resolve(HERE, '../.out');
 const head = () => execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
-const comma = (n: number) => n.toFixed(1).replace('.', ',');
+const comma = (n: number, digits = 1) => n.toFixed(digits).replace('.', ',');
+const thousands = (n: number) => n.toLocaleString('de-CH');
 
 /** Ersetzt im Browser die Antwort von /api/levels: Level 10 bekommt Status und metrics wie angegeben. */
 async function withLevel10(page: Page, level10: Record<string, unknown>) {
@@ -42,6 +43,11 @@ test.describe('level-10', () => {
     expect(images.frontendMB).toBeGreaterThan(0);
     expect(images.backendMB).toBeGreaterThan(0);
     expect(loadtest.requests).toBeGreaterThan(0);
+    const { tokens } = report;
+    expect(tokens.responses).toBeGreaterThan(0);
+    expect(tokens.models.length).toBeGreaterThan(0);
+    expect(tokens.total).toBe(tokens.input + tokens.cacheWrite5m + tokens.cacheWrite1h + tokens.cacheRead + tokens.output);
+    expect(tokens.costUsd).toBeGreaterThan(0);
   });
 
   test('Abschlussbericht wird dargestellt', async ({ page }) => {
@@ -59,6 +65,15 @@ test.describe('level-10', () => {
     for (const job of ['check', 'images', 'deploy']) await expect(page.getByTestId(`report-job-${job}`)).toHaveText(`${r.pipeline.jobs[job]} s`);
     await expect(page.getByTestId('report-pipeline-total')).toHaveText(`${r.pipeline.totalS} s`);
     await expect(page.getByTestId('report-pipeline-link')).toHaveAttribute('href', r.pipeline.url);
+    const t = r.tokens;
+    await expect(page.getByTestId('report-model')).toHaveText(t.models.join(', '));
+    await expect(page.getByTestId('report-tokens-input')).toHaveText(thousands(t.input));
+    await expect(page.getByTestId('report-tokens-cache-write')).toHaveText(thousands(t.cacheWrite5m + t.cacheWrite1h));
+    await expect(page.getByTestId('report-tokens-cache-read')).toHaveText(thousands(t.cacheRead));
+    await expect(page.getByTestId('report-tokens-output')).toHaveText(thousands(t.output));
+    await expect(page.getByTestId('report-tokens-total')).toHaveText(thousands(t.total));
+    await expect(page.getByTestId('report-cost')).toHaveText(`${comma(t.costUsd, 2)} USD`);
+    await expect(page.getByTestId('report-session')).toHaveText(`${Math.round(t.sessionS / 60)} min`);
     await expect(page.getByTestId('report-level')).toHaveCount(10);
   });
 
