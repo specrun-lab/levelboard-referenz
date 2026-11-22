@@ -105,14 +105,12 @@ Dazu `color-scheme: dark` auf `:root`.
   | Geprüft | `checkedAt` im Format `TT.MM.JJJJ, HH:MM`, sonst „–“ |
   | Checkdauer | `durationMs`: unter 1000 ms `850 ms` (gerundet), sonst Sekunden mit einer Nachkommastelle und Komma: `2,3 s`; null: „–“ |
   | Checks | `<bestanden>/<alle>`, z. B. `4/5`; ohne Checks: „–“ |
-  | Bauzeit | `metrics.tokens.buildS`: unter 60 s `39 s`, sonst `M:SS min` (z. B. `7:32 min`); bei `{ "inLevel": n }` `in L0n` (z. B. `in L07`); ohne `tokens` oder ohne `buildS`: „–“ |
-  | Kosten | `metrics.tokens.costUsd` als `1,20 USD` (2 Nachkommastellen, Komma); bei `{ "inLevel": n }` `in L0n` (zweistellig, z. B. `in L07`); ohne `tokens`: „–“ |
-  | Tokens (Ausgabe) | `metrics.tokens.output` mit Tausendertrennung `toLocaleString('de-CH')`, z. B. `56’103`; bei `inLevel` oder ohne `tokens`: „–“ |
+  | Bauzeit | `metrics.build.buildS`: unter 60 s `39 s`, sonst `M:SS min` (z. B. `7:32 min`); bei `metrics.build.inLevel` = n `in L0n` (zweistellig, z. B. `in L07`); ohne `metrics.build`: „–“ |
 
 ## Responsiv
 | Breite | Anpassung |
 |---|---|
-| ab 1200 px | 5 Spalten; Kacheln des Abschlussberichts in 3 Spalten |
+| ab 1200 px | 5 Spalten; Kacheln des Abschlussberichts in 4 Spalten |
 | 640–1199 px | Raster mit 2 Spalten; Kacheln des Abschlussberichts ebenfalls in 2 Spalten |
 | unter 640 px | Raster mit 1 Spalte und 12 px Abstand; `main` mit 16 px Innenabstand und 16 px Abstand; Kopfzeile mit 0 / 16 px Innenabstand und 16 px Abstand zwischen den Paaren; die `<dt>` der Kopfzeile ausgeblendet; die Paare „Commit“ und „Quelle“ ganz ausgeblendet (die `<dd>` bleiben im DOM); Zusammenfassung untereinander (Spalte, gestreckt) mit 16 px Abstand und 16 px Innenabstand; Abschlussbericht mit 16 px Innenabstand, Kacheln in 1 Spalte mit 12 px Abstand, Liste mit den Spalten `1fr auto` und ohne Zeitpunkt (ausgeblendet) |
 
@@ -126,26 +124,18 @@ Der Bericht hat **keine eigenen Daten**, er setzt sich aus den Levels zusammen (
 - Sonst ist er **gefüllt (`ready`)**.
 - `data-complete` ist `true`, wenn Level 10 `bestanden` ist, sonst `false`.
 
-Gefüllt zeigt er **5 Kacheln** in einem Raster (3 Spalten, 16 px Abstand, Reihenfolge wie in der Tabelle) und danach die **Liste der 10 Levels**.
+Gefüllt zeigt er **4 Kacheln** in einem Raster (4 Spalten, 16 px Abstand, Reihenfolge wie in der Tabelle) und danach die **Liste der 10 Levels**.
 - Jede Kachel: `--surface-2`, 1 px `--border`, `--radius`, Innenabstand 16 px. Oben ein `<h3>` (12 px, Gewicht 600, `--muted`, Großbuchstaben, `letter-spacing: 0.06em`), darunter eine `<dl>`. Jedes Paar steht in einer Zeile mit `space-between`: `<dt>` 13 px `--muted`, `<dd>` Schrift `--mono` 13 px.
-- Fehlen einer Kachel die Daten, zeigt sie statt der `<dl>` nur `<p data-testid="report-<teil>-missing">noch nicht erreicht</p>` (13 px, `--faint`). `<teil>` ist `tokens`, `loadtest`, `images` bzw. `pipeline`.
+- Fehlen einer Kachel die Daten, zeigt sie statt der `<dl>` nur `<p data-testid="report-<teil>-missing">noch nicht erreicht</p>` (13 px, `--faint`). `<teil>` ist `loadtest`, `images` bzw. `pipeline`.
 
 | Kachel (`<h3>`) | Daten | `<dt>` | `<dd>`, testid | Wert |
 |---|---|---|---|---|
 | Ergebnis | immer | Erreicht | `report-reached` | `<erreichtes Level> / 10` |
 | | | Score | `report-score` | `<erreichtes Level · 10> / 100` |
 | | | Vollständig | `report-complete` | `ja`, wenn Level 10 bestanden ist, sonst `nein` |
-| | | Bauzeit gesamt | `report-build-time` | Summe `buildS` aller Levels mit eigenem Token-Objekt, Format wie „Bauzeit“ der Karte; fehlt `buildS` irgendwo: „–“ |
+| | | Bauzeit gesamt | `report-build-time` | Summe `buildS` aller Levels mit eigener Bauzeit (nicht `inLevel`), Format wie „Bauzeit“ der Karte; ohne Einträge: „–“ |
 | | | Commit | `report-commit` | erste 7 Zeichen von `run.commit`, sonst „–“ |
 | | | Stand | `report-time` | `run.updatedAt`, formatiert wie „Geprüft“ |
-| Tokens | Summe über alle Levels mit eigenem Token-Objekt (nicht `inLevel`) | Modell | `report-model` | alle Modelle, alphabetisch, ohne Doppelte, verbunden mit `, ` |
-| | | Antworten | `report-responses` | Summe `responses`, Tausendertrennung `toLocaleString('de-CH')` |
-| | | Eingabe | `report-tokens-input` | Summe `input`, ebenso |
-| | | Cache schreiben | `report-tokens-cache-write` | Summe `cacheWrite5m + cacheWrite1h`, ebenso |
-| | | Cache lesen | `report-tokens-cache-read` | Summe `cacheRead`, ebenso |
-| | | Ausgabe | `report-tokens-output` | Summe `output`, ebenso |
-| | | Gesamt | `report-tokens-total` | Summe `total`, ebenso |
-| | | Kosten (API-Preis) | `report-cost` | Summe der `costUsd` der Levels, auf 2 Nachkommastellen gerundet, als `1,61 USD` |
 | Lasttest | `metrics.loadtest` von Level 9 | p50 | `report-p50` | `<p50Ms> ms` |
 | | | p95 | `report-p95` | `<p95Ms> ms` |
 | | | Durchsatz | `report-rps` | `<rps> Anfragen/s` mit 1 Nachkommastelle und Komma |
@@ -182,7 +172,7 @@ Gefüllt zeigt er **5 Kacheln** in einem Raster (3 Spalten, 16 px Abstand, Reihe
 | `level-checks` | Wert „Checks“ |
 | `report` | Abschlussbericht, mit `data-state` `ready` bzw. `empty` und `data-complete` |
 | `report-empty` | Hinweis „Noch kein Abschlussbericht …“ |
-| `report-tokens-missing`, `report-loadtest-missing`, `report-images-missing`, `report-pipeline-missing` | Platzhalter „noch nicht erreicht“ einer Kachel |
-| `level-build-time`, `level-cost`, `level-output` | Werte „Bauzeit“, „Kosten“ und „Tokens (Ausgabe)“ in der Karte |
-| `report-reached`, `report-score`, `report-complete`, `report-build-time`, `report-commit`, `report-time`, `report-model`, `report-responses`, `report-tokens-input`, `report-tokens-cache-write`, `report-tokens-cache-read`, `report-tokens-output`, `report-tokens-total`, `report-cost`, `report-p50`, `report-p95`, `report-rps`, `report-errors`, `report-image-frontend`, `report-image-backend`, `report-job-check`, `report-job-images`, `report-job-deploy`, `report-pipeline-total`, `report-pipeline-link` | Werte des Abschlussberichts (siehe oben) |
+| `report-loadtest-missing`, `report-images-missing`, `report-pipeline-missing` | Platzhalter „noch nicht erreicht“ einer Kachel |
+| `level-build-time` | Wert „Bauzeit“ in der Karte |
+| `report-reached`, `report-score`, `report-complete`, `report-build-time`, `report-commit`, `report-time`, `report-p50`, `report-p95`, `report-rps`, `report-errors`, `report-image-frontend`, `report-image-backend`, `report-job-check`, `report-job-images`, `report-job-deploy`, `report-pipeline-total`, `report-pipeline-link` | Werte des Abschlussberichts (siehe oben) |
 | `report-levels`, `report-level` | Liste der Levels im Abschlussbericht, Einträge mit `data-level` und `data-status` |

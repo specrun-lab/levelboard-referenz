@@ -195,32 +195,20 @@ export const STATUS_LABEL: Record<LevelStatus, string> = {
   gesperrt: 'Gesperrt',
 };
 
-/** Verbrauch einer Phase (metrics.tokens eines Levels, ab Spec 1.2.0). */
-export interface Tokens {
-  models: string[];
-  responses: number;
-  input: number;
-  cacheWrite5m: number;
-  cacheWrite1h: number;
-  cacheRead: number;
-  output: number;
-  total: number;
-  costUsd: number;
-  buildS?: number;
-}
+/** Bauzeit eines Levels (metrics.build, ab Spec 2.0.0): eigene Zeit oder „in Level n enthalten“. */
+export type Build = { buildS: number } | { inLevel: number };
 export interface Pipeline { runId: number; url: string; jobs: Record<string, number>; totalS: number }
 export interface Images { frontendMB: number; backendMB: number }
 export interface Loadtest { requests: number; errors: number; rps: number; p50Ms: number; p95Ms: number }
 
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 
-/** Verbrauch eines Levels: eigene Phase, „in Level n enthalten“ oder nichts. */
-export function tokensOf(l: LevelResult): { tokens: Tokens } | { inLevel: number } | null {
-  const t = l.metrics?.tokens;
-  if (!isObj(t)) return null;
-  if (isNum(t.inLevel)) return { inLevel: t.inLevel };
-  if (!Array.isArray(t.models) || ![t.responses, t.input, t.cacheWrite5m, t.cacheWrite1h, t.cacheRead, t.output, t.total, t.costUsd].every(isNum)) return null;
-  return { tokens: t as unknown as Tokens };
+/** Bauzeit eines Levels oder null, solange es keinen Eintrag gibt. */
+export function buildOf(l: LevelResult): Build | null {
+  const b = l.metrics?.build;
+  if (!isObj(b)) return null;
+  if (isNum(b.inLevel)) return { inLevel: b.inLevel };
+  return isNum(b.buildS) ? { buildS: b.buildS } : null;
 }
 
 /** Pipeline aus Level 6, Images aus Level 7, Lasttest aus Level 9 – null, solange nicht vorhanden. */
@@ -238,24 +226,10 @@ export function loadtestOf(levels: LevelResult[]): Loadtest | null {
   return isObj(l) && [l.requests, l.errors, l.rps, l.p50Ms, l.p95Ms].every(isNum) ? (l as unknown as Loadtest) : null;
 }
 
-/** Summe über alle Levels mit eigener Phase; Kosten = Summe der (gerundeten) Kosten der Levels. */
-export function tokenSum(levels: LevelResult[]): (Tokens & { phases: number }) | null {
-  const list = levels.map(tokensOf).flatMap((x) => (x && 'tokens' in x ? [x.tokens] : []));
-  if (list.length === 0) return null;
-  const add = (k: keyof Omit<Tokens, 'models' | 'buildS'>) => list.reduce((s, t) => s + t[k], 0);
-  return {
-    models: [...new Set(list.flatMap((t) => t.models))].sort(),
-    responses: add('responses'),
-    input: add('input'),
-    cacheWrite5m: add('cacheWrite5m'),
-    cacheWrite1h: add('cacheWrite1h'),
-    cacheRead: add('cacheRead'),
-    output: add('output'),
-    total: add('total'),
-    costUsd: Math.round(add('costUsd') * 100) / 100,
-    buildS: list.every((t) => typeof t.buildS === 'number') ? list.reduce((s, t) => s + (t.buildS ?? 0), 0) : undefined,
-    phases: list.length,
-  };
+/** Bauzeit gesamt: Summe aller Levels mit eigener Zeit; null, solange keine erfasst ist. */
+export function buildSum(levels: LevelResult[]): number | null {
+  const list = levels.map(buildOf).flatMap((b) => (b && 'buildS' in b ? [b.buildS] : []));
+  return list.length ? list.reduce((s, x) => s + x, 0) : null;
 }
 
 /** Bauzeit: 39 → „39 s“, 452 → „7:32 min“ */

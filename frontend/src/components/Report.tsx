@@ -5,12 +5,11 @@ import {
   formatBuild,
   formatDateTime,
   formatDecimal,
-  formatThousands,
   imagesOf,
   loadtestOf,
   pipelineOf,
   reachedLevel,
-  tokenSum,
+  buildSum,
   type LevelResult,
 } from '../results';
 
@@ -35,13 +34,13 @@ const JOBS = ['check', 'images', 'deploy'] as const;
 
 /**
  * Abschlussbericht: immer sichtbar, sobald ein Level geprüft ist. Er setzt sich aus den Levels zusammen
- * (Tokens aus jedem Level, Pipeline aus Level 6, Images aus Level 7, Lasttest aus Level 9).
+ * (Bauzeit aus jedem Level, Pipeline aus Level 6, Images aus Level 7, Lasttest aus Level 9).
  */
 export default function Report({ levels, commit, updatedAt }: { levels: LevelResult[]; commit: string | null; updatedAt: string | null }) {
   const checked = levels.some((l) => l.checkedAt !== null);
   const reached = reachedLevel(levels);
   const complete = levels[LEVEL_COUNT - 1]?.status === 'bestanden';
-  const tokens = tokenSum(levels);
+  const build = buildSum(levels);
   const pipeline = pipelineOf(levels);
   const images = imagesOf(levels);
   const loadtest = loadtestOf(levels);
@@ -68,27 +67,10 @@ export default function Report({ levels, commit, updatedAt }: { levels: LevelRes
                 <Fact label="Erreicht" testid="report-reached">{reached} / {LEVEL_COUNT}</Fact>
                 <Fact label="Score" testid="report-score">{reached * 10} / 100</Fact>
                 <Fact label="Vollständig" testid="report-complete">{complete ? 'ja' : 'nein'}</Fact>
-                <Fact label="Bauzeit gesamt" testid="report-build-time">{typeof tokens?.buildS === 'number' ? formatBuild(tokens.buildS) : '–'}</Fact>
+                <Fact label="Bauzeit gesamt" testid="report-build-time">{build !== null ? formatBuild(build) : '–'}</Fact>
                 <Fact label="Commit" testid="report-commit">{commit ? commit.slice(0, 7) : '–'}</Fact>
                 <Fact label="Stand" testid="report-time">{formatDateTime(updatedAt)}</Fact>
               </dl>
-            </div>
-            <div className="report-tile">
-              <h3>Tokens</h3>
-              {!tokens ? (
-                <Missing part="tokens" />
-              ) : (
-                <dl>
-                  <Fact label="Modell" testid="report-model">{tokens.models.join(', ') || '–'}</Fact>
-                  <Fact label="Antworten" testid="report-responses">{formatThousands(tokens.responses)}</Fact>
-                  <Fact label="Eingabe" testid="report-tokens-input">{formatThousands(tokens.input)}</Fact>
-                  <Fact label="Cache schreiben" testid="report-tokens-cache-write">{formatThousands(tokens.cacheWrite5m + tokens.cacheWrite1h)}</Fact>
-                  <Fact label="Cache lesen" testid="report-tokens-cache-read">{formatThousands(tokens.cacheRead)}</Fact>
-                  <Fact label="Ausgabe" testid="report-tokens-output">{formatThousands(tokens.output)}</Fact>
-                  <Fact label="Gesamt" testid="report-tokens-total">{formatThousands(tokens.total)}</Fact>
-                  <Fact label="Kosten (API-Preis)" testid="report-cost">{formatDecimal(tokens.costUsd, 2)} USD</Fact>
-                </dl>
-              )}
             </div>
             <div className="report-tile">
               <h3>Lasttest</h3>

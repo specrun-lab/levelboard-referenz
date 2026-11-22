@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { levelTokens } from './collect-tokens.mjs';
+import { updateBauzeit } from './bauzeit.mjs';
 import { imageSizeMB, pipelineOf } from './collect-report.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -51,18 +51,17 @@ for (const l of results.levels) {
   }
 }
 
-// Kennzahlen bei ihrem Level (spec/05-datenmodell.md): tokens bei jedem geprüften Level,
+// Kennzahlen bei ihrem Level (spec/05-datenmodell.md): build (Bauzeit) bei jedem Level mit Eintrag in bauzeit.json,
 // pipeline bei Level 6, images bei Level 7, loadtest bei Level 9 (jeweils nur, wenn bestanden)
 const current = results.levels.filter((l) => byLevel.has(l.level)).map((l) => ({ level: l.level, status: l.status }));
-let tokens = new Map();
-try { tokens = levelTokens(current); } catch (err) { console.log(`Tokens nicht ermittelbar: ${err.message}`); }
+const bauzeit = updateBauzeit(current);
 const repo = process.env.GITHUB_REPO ?? `specrun-lab/levelboard-${process.env.RUN_ID ?? 'lokal'}`;
 const head = () => execFileSync('git', ['rev-parse', 'HEAD'], { cwd: path.join(here, '..'), encoding: 'utf8' }).trim();
 const readOut = (f) => { try { return JSON.parse(fs.readFileSync(path.join(here, '.out', f), 'utf8')); } catch { return null; } };
 for (const l of results.levels) {
   if (!byLevel.has(l.level) || (l.status !== 'bestanden' && l.status !== 'fehlgeschlagen')) continue;
   const m = {};
-  if (tokens.has(l.level)) m.tokens = tokens.get(l.level);
+  if (bauzeit.levels[l.level]) m.build = bauzeit.levels[l.level];
   if (l.status === 'bestanden') {
     try {
       if (l.level === 6) m.pipeline = pipelineOf(repo, head());

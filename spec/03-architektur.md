@@ -6,7 +6,8 @@ Makefile
 .github/workflows/ci.yml   – ab Level 6 (ab Level 7 mit Job „images“, ab Level 8 mit Job „deploy“)
 docker-compose.yml         – ab Level 7 (nur in der Pipeline benutzt)
 deploy/compose.yml         – ab Level 8 (Compose-Datei für den Server)
-.gitignore                 – node_modules/, dist/, .run/, .out/, test-results/, *.tsbuildinfo, backend/bin/
+.gitignore                 – node_modules/, dist/, .run/, .out/, test-results/, *.tsbuildinfo, backend/bin/, bauzeit.json
+bauzeit.json               – Startzeit und Bauzeit pro Level (nicht in git, siehe 05-datenmodell.md)
 frontend/
   package.json
   package-lock.json        – durch npm install erzeugt, wird von npm ci benötigt
@@ -44,7 +45,7 @@ checks/
   write-results.mjs
   report-live.mjs          – ab Level 8, nur in der Pipeline (Job „deploy“)
   loadtest.mjs             – ab Level 9 (Lasttest gegen die Live-Seite)
-  collect-tokens.mjs       – ab Level 1 (Verbrauch pro Level aus dem Session-Protokoll)
+  bauzeit.mjs              – ab Level 1 (Bauzeit pro Level, siehe 05-datenmodell.md)
   collect-report.mjs       – ab Level 6 (Pipeline-Dauer, Image-Größen)
 backend/                   – ab Level 3: Go-Modul (siehe levels/level-03.md)
   go.mod, go.sum           – ab Level 4 mit modernc.org/sqlite

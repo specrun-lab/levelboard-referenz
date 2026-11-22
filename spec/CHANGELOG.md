@@ -1,5 +1,11 @@
 # Spec-Changelog
 
+## 2.0.0 – 2026-11-22
+- **Unabhängig vom Agent-Harness:** Die Spec setzt kein bestimmtes Werkzeug mehr voraus. Weg fallen die Session-Protokolle unter `~/.claude/projects`, `collect-tokens.mjs`, Tokens und Kosten in `metrics` sowie die Preistabelle. Tokens und Kosten misst nur noch der Prüfer, nach dem Lauf.
+- **Bauzeit aus den eigenen `make check`:** neue Datei `bauzeit.json` (Startzeit aus Schritt 0 in `00-start.md`, Einträge beim ersten Bestehen, danach unveränderlich, `BAUZEIT_FEST=1` für den Prüfer) und `checks/bauzeit.mjs`. `metrics.build` ersetzt `metrics.tokens` (05).
+- 06: Karten ohne „Kosten“ und „Tokens (Ausgabe)“, „Bauzeit“ aus `metrics.build`. Bericht mit 4 Kacheln ohne „Tokens“, „Bauzeit gesamt“ als Summe.
+- Level 10: Tests und Nachprüfung auf die Bauzeit umgestellt.
+
 ## 1.4.0 – 2026-11-21
 - 05: Preisstufe für Haiku 5.5. Antworten, deren Prompt (Eingabe + Cache-Schreiben + Cache-Lesen) über 100’000 Tokens liegt, kosten $0.50 / $0.625 / $1 / $0.05 / $2.50 pro Mio. Tokens statt des Grundpreises (laut Anthropic-Preisseite). Vorher rechnete die Spec immer mit dem Grundpreis und unterschätzte lange Haiku-Läufe.
 

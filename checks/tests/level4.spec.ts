@@ -1,4 +1,4 @@
-import { test, expect, type APIRequestContext } from '@playwright/test';
+import { test, expect, request as playwrightRequest, type APIRequestContext } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
@@ -43,8 +43,11 @@ test.describe('level-4', () => {
     const before = await (await history(request, 1, '?limit=500')).json();
     const levelsBefore = (await (await request.get(`${API}/api/levels`)).json()).levels;
     execFileSync('make', ['--no-print-directory', 'restart-backend'], { cwd: ROOT, stdio: 'pipe', timeout: 90_000 });
-    const after = await (await history(request, 1, '?limit=500')).json();
-    const levelsAfter = (await (await request.get(`${API}/api/levels`)).json()).levels;
+    // Frische Verbindung: Die alte (keep-alive) gehört noch zum beendeten Backend und bricht sonst mit ECONNRESET ab
+    const fresh = await playwrightRequest.newContext();
+    const after = await (await history(fresh, 1, '?limit=500')).json();
+    const levelsAfter = (await (await fresh.get(`${API}/api/levels`)).json()).levels;
+    await fresh.dispose();
     expect(after).toEqual(before);
     expect(levelsAfter).toEqual(levelsBefore);
   });

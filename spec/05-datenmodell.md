@@ -115,65 +115,35 @@ Aufruf: `node write-results.mjs <level> [<level> …]`, z. B. `node write-result
 
 | Feld | bei | gesetzt, wenn | Inhalt |
 |---|---|---|---|
-| `tokens` | jedem geprüften Level, ab Level 1 | das Session-Protokoll lesbar ist | Verbrauch der Phase, siehe unten |
+| `build` | jedem Level mit Eintrag in `bauzeit.json`, ab Level 1 | das Level einmal bestanden wurde | der Eintrag aus `bauzeit.json`, siehe „Bauzeit pro Level“ |
 | `pipeline` | Level 6 | Level 6 bestanden | `pipelineOf(GITHUB_REPO, HEAD)` aus `checks/collect-report.mjs` |
 | `images` | Level 7 | Level 7 bestanden | `{ frontendMB, backendMB }` über `imageSizeMB(…)` aus `checks/collect-report.mjs` |
 | `loadtest` | Level 9 | Level 9 bestanden und `checks/.out/loadtest.json` vorhanden | Inhalt dieser Datei |
 
-Kann eine Kennzahl nicht ermittelt werden (z. B. kein Protokoll oder `gh` nicht erreichbar), fehlt nur dieses Feld. `write-results.mjs` gibt dann eine Zeile mit dem Grund aus und arbeitet weiter.
+Kann eine Kennzahl nicht ermittelt werden (z. B. `gh` nicht erreichbar), fehlt nur dieses Feld. `write-results.mjs` gibt dann eine Zeile mit dem Grund aus und arbeitet weiter.
 
 `checks/collect-report.mjs` (ab Level 6) exportiert:
 - `pipelineOf(repo, sha)`: Lauf von `CI` für `sha` auf `main` (`gh api repos/<repo>/actions/workflows/ci.yml/runs?branch=main&head_sha=<sha>&per_page=1`). Ergebnis: `{ runId, url, jobs, totalS }` mit `runId` = `id`, `url` = `html_url`, `jobs` = Objekt Jobname → Sekunden von `started_at` bis `completed_at` (gerundet, nur abgeschlossene Jobs) und `totalS` = Sekunden von `run_started_at` bis zum spätesten `completed_at`, gerundet.
 - `async imageSizeMB(name, tag)`: Image `ghcr.io/<name>:<tag>` ohne Anmeldung gelesen, wie in Level 7. Bei einem Index gilt der Eintrag `linux/amd64`. Wert: Summe der `size` aller `layers`, geteilt durch 1024 · 1024, auf 1 Nachkommastelle gerundet.
 
-### Verbrauch pro Level: `checks/collect-tokens.mjs` (ab Level 1)
-Claude Code legt die Protokolle deiner Session unter `~/.claude/projects/` ab (`*.jsonl`, auch in Unterordnern). Daraus ermittelt das Modul den Verbrauch je Level. Es exportiert mindestens `levelTokens(current, dir)`; `current` ist der Status je geprüftem Level dieses Laufs, aufsteigend. Ergebnis: je Level ein Token-Objekt oder `{ "inLevel": n }`.
+### Bauzeit pro Level: `bauzeit.json` und `checks/bauzeit.mjs` (ab Level 1)
+Die **Bauzeit** eines Levels ist die Zeit, die du gebraucht hast, bis `make check` es **erstmals bestanden** gemeldet hat. Sie stammt aus deinen eigenen `make check`, unabhängig davon, mit welchem Werkzeug du arbeitest.
 
-**Protokoll lesen.** Jede Zeile ist ein JSON-Objekt; ungültige Zeilen überspringen.
-- **Antworten:** Zeilen mit `type: "assistant"` und `message.usage`. Jede `message.id` zählt nur einmal (die erste Zeile gilt). `message.model` = `<synthetic>` zählt nicht. Zeitpunkt ist `timestamp`.
-- **Befehle:** In den Antworten die Blöcke `content[]` mit `type: "tool_use"` und `name: "Bash"`, gemerkt als `id` → `input.command`.
-- **Ausgaben:** Zeilen mit `type: "user"`:
-  - Hat die Zeile `toolUseResult` mit `stdout` oder `stderr`, ist die Ausgabe `stdout + "\n" + stderr`. Sie gehört zu `tool_use_id` des ersten Blocks `tool_result` in `message.content`.
-  - Enthält der Text der Zeile `<task-notification>`, ist er die Ausgabe des Befehls mit der `id` aus `<tool-use-id>…</tool-use-id>` (Hintergrundbefehle).
-
-**Phasengrenzen.** Die Ausgaben werden nach Zeit sortiert. Es zählen nur Ausgaben von Befehlen, die `make check` enthalten (Muster `make\s+check\b`). Für jede solche Ausgabe ist das erreichte Level das höchste `n`, für das `Level 1: bestanden` … `Level n: bestanden` alle darin vorkommen. Liegt es über dem bisher besten, entsteht eine Grenze `{ t, from: best + 1, to: n }`.
-
-**Phasen.** Eine Phase umfasst alle Antworten nach der vorigen Grenze bis einschließlich ihrer eigenen. Ihr Verbrauch gehört zum Level `to`; die Levels `from` bis `to − 1` bekommen `{ "inLevel": to }`. Danach kommt die laufende Phase, also alle Antworten nach der letzten Grenze:
-- Erreicht dieser Lauf (`current`) ein höheres Level als das beste bisher, gehört sie zu diesem Level. Die neuen Levels darunter bekommen `{ "inLevel": … }`, und ein fehlgeschlagenes Level darüber bekommt ein Token-Objekt mit lauter Nullen.
-- Sonst gehört sie zum fehlgeschlagenen Level dieses Laufs, falls es über dem besten liegt.
-
-Nur geprüfte Levels bekommen einen Eintrag. Ein Level, das schon früher bestanden wurde, behält so seinen Wert, auch über spätere `make check` hinweg.
-
-**Token-Objekt:**
+**Datei `bauzeit.json`** im Projektordner (in `.gitignore`, wird nie committet und von keinem `make`-Ziel gelöscht):
 ```json
-{ "models": ["claude-sonnet-5-5"], "responses": 22, "input": 44, "cacheWrite5m": 0, "cacheWrite1h": 80734,
-  "cacheRead": 1302190, "output": 56103, "total": 1439071, "costUsd": 1.2,
-  "from": "2026-11-20T15:57:12.000Z", "until": "2026-11-20T16:04:44.000Z", "buildS": 452 }
+{ "start": "2026-11-22T09:00:00Z",
+  "levels": { "1": { "passedAt": "2026-11-22T09:08:10Z", "inLevel": 2 },
+              "2": { "passedAt": "2026-11-22T09:08:10Z", "buildS": 490 },
+              "3": { "passedAt": "2026-11-22T09:10:02Z", "buildS": 112 } } }
 ```
-| Feld | aus `message.usage` der Antworten der Phase |
-|---|---|
-| `input` | Summe `input_tokens` |
-| `cacheWrite1h` | Summe `cache_creation.ephemeral_1h_input_tokens` (fehlt `cache_creation`: 0) |
-| `cacheWrite5m` | Summe `cache_creation.ephemeral_5m_input_tokens`; fehlt `cache_creation`, dann `cache_creation_input_tokens` |
-| `cacheRead` | Summe `cache_read_input_tokens` |
-| `output` | Summe `output_tokens` |
-
-- Fehlende Werte zählen als 0. `total` ist die Summe der fünf Felder.
-- `models`: alle Modelle der Phase, alphabetisch, ohne Doppelte. `responses`: Anzahl der Antworten.
-- `from` und `until`: `timestamp` der ersten und der letzten Antwort als ISO-Zeit, bei keiner Antwort `null`.
-- `buildS` (**Bauzeit**): Sekunden vom **Beginn** der Phase bis zum `timestamp` ihrer letzten Antwort, also bis zum Start des `make check`, der das Level besteht. Gerundet. Beginn ist der Zeitpunkt der vorigen Grenze; bei der ersten Phase ist es der `timestamp` der ersten Antwort überhaupt. Eine Phase ohne Antworten hat `buildS` = 0. Für die laufende Phase und ein fehlgeschlagenes Level gilt dasselbe, mit Beginn an der letzten Grenze.
-- `costUsd`: Tokens mal Preis des jeweiligen Modells (USD pro Million Tokens), über die Phase summiert und auf 2 Nachkommastellen gerundet. Ein Modell, das nicht in der Tabelle steht, ist ein Fehler.
-
-| Modell | Eingabe | Cache schreiben 5 min | Cache schreiben 1 h | Cache lesen | Ausgabe |
-|---|---|---|---|---|---|
-| `claude-opus-5-5` | 4 | 5 | 8 | 0.2 | 20 |
-| `claude-sonnet-5-5` | 2 | 2.5 | 4 | 0.1 | 10 |
-| `claude-haiku-5-5` | 0.1 | 0.125 | 0.2 | 0.01 | 0.5 |
-| `claude-haiku-5-5`, Prompt über 100’000 Tokens | 0.5 | 0.625 | 1 | 0.05 | 2.5 |
-
-**Preisstufe bei Haiku 5.5:** Abgerechnet wird jede Antwort einzeln. Ihre Prompt-Länge ist `input_tokens + cache_creation_input_tokens + cache_read_input_tokens`, also Eingabe, Cache-Schreiben und Cache-Lesen zusammen. Liegt sie **über 100’000**, gelten für diese Antwort alle Preise der zweiten Haiku-Zeile, auch der für die Ausgabe. Die anderen Modelle haben nur eine Preisstufe.
-
-Gibt es kein Protokoll oder keine Antwort, bekommt kein Level `tokens`. Was nach dem letzten `make check` noch verbraucht wird, steht in keinem Level.
+- `start` legst du gleich zu Beginn selbst an (`00-start.md`, Schritt 0). Fehlt er, setzt `write-results.mjs` ihn beim ersten Aufruf auf „jetzt“.
+- `checks/bauzeit.mjs` liest und ergänzt die Datei. `write-results.mjs` ruft es auf, **nachdem** der Status aller Levels feststeht:
+  1. „Erreicht“ ist das höchste Level `n`, bis zu dem in diesem Lauf alle Levels `bestanden` sind. „Bisher“ ist das höchste `n`, für das `levels["1"]` … `levels["n"]` alle schon existieren.
+  2. Ist „erreicht“ größer als „bisher“, bekommt das Level „erreicht“ den Eintrag `{ "passedAt": <jetzt>, "buildS": <Sekunden seit passedAt von „bisher“, bzw. seit start> }`, gerundet und nie negativ. Die Levels dazwischen (`bisher + 1` bis `erreicht − 1`) bekommen `{ "passedAt": <jetzt>, "inLevel": <erreicht> }`.
+  3. **Bestehende Einträge werden nie geändert.** Ein Level, das später wieder fehlschlägt, behält seinen Eintrag.
+  4. Ist die Umgebungsvariable `BAUZEIT_FEST=1` gesetzt, wird nichts eingetragen, nur gelesen. So arbeitet der Prüfer.
+- „Jetzt“ ist die Zeit in UTC im Format von `toISOString()`.
+- `metrics.build` jedes Levels mit Eintrag ist genau dieser Eintrag. Die Seite zeigt daraus die Bauzeit pro Karte und die Summe im Abschlussbericht (`06-design.md`).
 
 ## Datenbank (ab Level 4)
 Das Backend speichert in einer SQLite-Datei (Pfad aus `LEVELBOARD_DB`, Standard `.run/levelboard.db`). Das Schema ist **exakt** so anzulegen, mit Spalten in dieser Reihenfolge:

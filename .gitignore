@@ -5,3 +5,4 @@ dist/
 test-results/
 *.tsbuildinfo
 backend/bin/
+bauzeit.json

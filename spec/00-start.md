@@ -1,10 +1,13 @@
 # 00 – Start
 
-**Spec-Version:** 1.4.0 (umfasst Level 1–10)
+**Spec-Version:** 2.0.0 (umfasst Level 1–10)
 
 Du baust das **Levelboard**: eine Web-App, die zeigt, wie weit ein Coding-Agent auf einem Pfad aus 10 Levels gekommen ist, und die sich dabei selbst misst. Du bist dieser Agent.
 
 ## Arbeitsauftrag
+0. **Gleich zu Beginn**, bevor du irgendetwas liest oder baust: Lege im aktuellen Verzeichnis die Datei `bauzeit.json` mit deiner Startzeit an, zum Beispiel mit
+   `printf '{"start":"%s","levels":{}}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > bauzeit.json`.
+   Daraus wird später die Bauzeit jedes Levels berechnet (siehe `05-datenmodell.md`, „Bauzeit pro Level“). Ändere die Datei danach nie von Hand.
 1. Lies **alle** Dateien in diesem Ordner, in dieser Reihenfolge:
    1. `00-start.md` (diese Datei)
    2. `01-produkt.md` – was das Levelboard ist

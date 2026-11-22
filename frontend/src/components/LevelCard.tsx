@@ -1,14 +1,11 @@
-import { LEVEL_TITLES, STATUS_LABEL, formatDateTime, formatDecimal, formatBuild, formatDuration, formatThousands, tokensOf, type LevelResult } from '../results';
+import { LEVEL_TITLES, STATUS_LABEL, buildOf, formatBuild, formatDateTime, formatDuration, type LevelResult } from '../results';
 
 export default function LevelCard({ result }: { result: LevelResult }) {
   const { level, status, checkedAt, durationMs, checks } = result;
   const passed = checks.filter((c) => c.ok).length;
-  // Verbrauch der Phase (ab Spec 1.2.0): eigene Werte, „in L07“ bei gemeinsamer Phase, sonst „–“
-  const use = tokensOf(result);
-  const cost = !use ? '–' : 'inLevel' in use ? `in L${String(use.inLevel).padStart(2, '0')}` : `${formatDecimal(use.tokens.costUsd, 2)} USD`;
-  const output = use && 'tokens' in use ? formatThousands(use.tokens.output) : '–';
-  const inLevel = use && 'inLevel' in use ? `in L${String(use.inLevel).padStart(2, '0')}` : null;
-  const build = inLevel ?? (use && 'tokens' in use && typeof use.tokens.buildS === 'number' ? formatBuild(use.tokens.buildS) : '–');
+  // Bauzeit (ab Spec 2.0.0): eigene Zeit, „in L07“ bei gemeinsamer Phase, sonst „–“
+  const b = buildOf(result);
+  const build = !b ? '–' : 'inLevel' in b ? `in L${String(b.inLevel).padStart(2, '0')}` : formatBuild(b.buildS);
   return (
     <article
       className={`card status-${status}`}
@@ -42,14 +39,6 @@ export default function LevelCard({ result }: { result: LevelResult }) {
         <div>
           <dt>Bauzeit</dt>
           <dd data-testid="level-build-time">{build}</dd>
-        </div>
-        <div>
-          <dt>Kosten</dt>
-          <dd data-testid="level-cost">{cost}</dd>
-        </div>
-        <div>
-          <dt>Tokens (Ausgabe)</dt>
-          <dd data-testid="level-output">{output}</dd>
         </div>
       </dl>
     </article>
