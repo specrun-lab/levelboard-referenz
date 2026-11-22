@@ -391,7 +391,7 @@ dd {
 
 .report-levels-head {
   display: grid;
-  grid-template-columns: 1fr 120px 110px 130px 150px;
+  grid-template-columns: 1fr 110px 110px 150px 150px;
   gap: 12px;
   margin: 8px 0 -12px;
   padding: 6px 0;
@@ -408,7 +408,7 @@ dd {
 
 .report-levels li {
   display: grid;
-  grid-template-columns: 1fr 120px 110px 130px 150px;
+  grid-template-columns: 1fr 110px 110px 150px 150px;
   gap: 12px;
   padding: 6px 0;
   border-top: 1px solid var(--border);
@@ -497,7 +497,7 @@ dd {
 
   .report-levels-head,
   .report-levels li {
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr 100px 80px;
   }
 
   .report-levels-head span:nth-child(4),
