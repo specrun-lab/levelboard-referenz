@@ -51,6 +51,7 @@ Test 4 meldet absichtlich eine Probe an Level 1 und leert damit live die höhere
 1. Dateien anlegen, committen, pushen, auf die Pipeline warten (alle drei Jobs grün, wie in Level 8).
 2. `make level9` und `make check` → Level 1–9 bestanden. Die Ausgabe enthält für jedes Level `… an das Backend gemeldet` und `… an die Live-API gemeldet`.
 3. Kontrolle: `GET <LIVE_URL>/api/levels` zeigt Level 1–9 `bestanden`, und Level 9 hat die Lastwerte in `metrics.loadtest` (siehe `05-datenmodell.md`).
+4. Ab jetzt setzt jeder Push die Live-Seite beim Deploy auf Level 1–5 zurück (die Pipeline meldet nur diese). Nach jedem Push also auf die Pipeline warten und erneut `make check` (siehe `00-start.md`, Schritt 5).
 
 ## Bestanden, wenn (Prüfer)
 1. Level 1–8 sind bestanden.

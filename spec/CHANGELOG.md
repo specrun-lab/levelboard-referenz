@@ -1,5 +1,8 @@
 # Spec-Changelog
 
+## 2.1.1 – 2026-11-22
+- Klarstellung ohne neue Funktion: **Der letzte Befehl ist immer `make check`.** Jeder Push ab Level 8 deployt neuen Code, und die Pipeline meldet dabei nur Level 1–5, was live die höheren Levels leert. Nach jedem Push also auf die Pipeline warten und erneut `make check`. Neu in `00-start.md` (Schritt 5), `levels/level-09.md` und `levels/level-10.md` (je Schritt 4). Anlass: Lauf 015 pushte nach 10 / 10 noch einen „Feinschliff“, die Live-Seite fiel auf 5 / 10 zurück, und der Prüfer gab 80 / 100.
+
 ## 2.1.0 – 2026-11-22
 - **Verbrauch nachtragen:** neuer Endpunkt `GET`/`PUT /api/usage` (04, `openapi.yaml`). Der Runner misst Tokens und Kosten nach der Prüfung und trägt sie auf der Live-Seite nach. Gespeichert wird `usage.json` neben der Datenbank. Format in 05, „Verbrauch“.
 - 06: Abschlussbericht wieder mit Kachel „Tokens“ (Harness, Modell, Tokens (Ausgabe), Tokens gesamt, Kosten gesamt; ohne Verbrauch „wird nach der Prüfung ergänzt“), 5 Kacheln in 3 Spalten. Die Liste der Levels bekommt eine Kopfzeile und die Spalten „Kosten“ und „Tokens (Ausgabe)“ (`report-level-cost`, `report-level-output`).

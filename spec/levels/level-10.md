@@ -43,6 +43,7 @@ Kein eigenes Level. Die Datei läuft erst **nach** der Meldung an die Live-API u
 1. Tests anpassen, committen, pushen, auf die Pipeline warten (alle drei Jobs grün).
 2. `make level10` und `make check` → Level 1–10 bestanden. Alle zehn Levels werden an die Live-API gemeldet, und die Nachprüfung besteht.
 3. Kontrolle im Browser: Die Live-Seite zeigt 10 / 10 und einen vollständigen Abschlussbericht.
+4. **Danach nichts mehr pushen.** Willst du noch etwas ändern, dann gilt nach dem Push wieder Schritt 1–3: Die Pipeline setzt die Live-Seite beim Deploy auf Level 1–5 zurück, erst dein nächstes `make check` meldet wieder 1–10. Der Prüfer bewertet den Stand, den die Live-Seite am Ende zeigt.
 
 ## Bestanden, wenn (Prüfer)
 1. Level 1–9 sind bestanden.
