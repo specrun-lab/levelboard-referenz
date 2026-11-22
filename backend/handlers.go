@@ -198,6 +198,8 @@ func NewHandler(s *Store) http.Handler {
 	})
 
 	// Alles andere: 404 als JSON
+	mux.HandleFunc("/api/usage", usageHandler(s.usage))
+
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "nicht gefunden")
 	})

@@ -114,6 +114,7 @@ type Store struct {
 	version string
 	commit  *string // Commit des laufenden Images (LEVELBOARD_COMMIT), sonst nil
 	now     func() time.Time
+	usage   *usageStore // Verbrauch (usage.json neben der Datenbank)
 }
 
 // SetCommit legt den Commit fest, den run.commit und /api/health melden; leer heißt unbekannt (null).
@@ -141,7 +142,7 @@ func OpenStore(path, runID, version string, now func() time.Time) (*Store, error
 		return nil, err
 	}
 	db.SetMaxOpenConns(1)
-	s := &Store{db: db, runID: runID, version: version, now: now}
+	s := &Store{db: db, runID: runID, version: version, now: now, usage: newUsageStore(path)}
 	if err := s.migrate(); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("Migration: %w", err)

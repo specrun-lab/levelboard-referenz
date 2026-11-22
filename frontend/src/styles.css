@@ -323,7 +323,7 @@ dd {
 
 .report-tiles {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
@@ -389,9 +389,26 @@ dd {
   list-style: none;
 }
 
+.report-levels-head {
+  display: grid;
+  grid-template-columns: 1fr 120px 110px 130px 150px;
+  gap: 12px;
+  margin: 8px 0 -12px;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.report-levels-head span:nth-child(n + 3) {
+  text-align: right;
+}
+
 .report-levels li {
   display: grid;
-  grid-template-columns: 1fr 140px 160px;
+  grid-template-columns: 1fr 120px 110px 130px 150px;
   gap: 12px;
   padding: 6px 0;
   border-top: 1px solid var(--border);
@@ -412,6 +429,12 @@ dd {
 
 .report-levels li.status-gesperrt .report-level-status {
   color: var(--st-gesperrt);
+}
+
+.report-level-cost,
+.report-level-output {
+  font-family: var(--mono);
+  text-align: right;
 }
 
 .report-level-time {
@@ -472,10 +495,14 @@ dd {
     gap: 12px;
   }
 
+  .report-levels-head,
   .report-levels li {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto auto;
   }
 
+  .report-levels-head span:nth-child(4),
+  .report-levels-head span:nth-child(5),
+  .report-level-output,
   .report-level-time {
     display: none;
   }

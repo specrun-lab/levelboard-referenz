@@ -1,5 +1,10 @@
 # Spec-Changelog
 
+## 2.1.0 – 2026-11-22
+- **Verbrauch nachtragen:** neuer Endpunkt `GET`/`PUT /api/usage` (04, `openapi.yaml`). Der Runner misst Tokens und Kosten nach der Prüfung und trägt sie auf der Live-Seite nach. Gespeichert wird `usage.json` neben der Datenbank. Format in 05, „Verbrauch“.
+- 06: Abschlussbericht wieder mit Kachel „Tokens“ (Harness, Modell, Tokens (Ausgabe), Tokens gesamt, Kosten gesamt; ohne Verbrauch „wird nach der Prüfung ergänzt“), 5 Kacheln in 3 Spalten. Die Liste der Levels bekommt eine Kopfzeile und die Spalten „Kosten“ und „Tokens (Ausgabe)“ (`report-level-cost`, `report-level-output`).
+- Level 10: vierter Test `Verbrauch wird gespeichert und gelesen`, Tests 2 und 3 ersetzen zusätzlich `/api/usage`. Der Prüfer prüft `/api/usage` live (neues Kriterium 6).
+
 ## 2.0.0 – 2026-11-22
 - **Unabhängig vom Agent-Harness:** Die Spec setzt kein bestimmtes Werkzeug mehr voraus. Weg fallen die Session-Protokolle unter `~/.claude/projects`, `collect-tokens.mjs`, Tokens und Kosten in `metrics` sowie die Preistabelle. Tokens und Kosten misst nur noch der Prüfer, nach dem Lauf.
 - **Bauzeit aus den eigenen `make check`:** neue Datei `bauzeit.json` (Startzeit aus Schritt 0 in `00-start.md`, Einträge beim ersten Bestehen, danach unveränderlich, `BAUZEIT_FEST=1` für den Prüfer) und `checks/bauzeit.mjs`. `metrics.build` ersetzt `metrics.tokens` (05).

@@ -247,3 +247,55 @@ export function formatThousands(n: number): string {
 export function formatDecimal(n: number, digits = 1): string {
   return n.toFixed(digits).replace('.', ',');
 }
+
+/**
+ * Verbrauch (GET /api/usage, ab Spec 2.1.0): Tokens und Kosten, vom Runner nach der Prüfung nachgetragen.
+ * Pro Level eigene Werte oder „in Level n enthalten“; costUsd null = Preis des Modells unbekannt.
+ */
+export interface UsageNumbers { output: number; total: number; costUsd: number | null }
+export type LevelUsage = UsageNumbers | { inLevel: number };
+export interface Usage {
+  harness: string | null;
+  models: string[];
+  measuredAt: string | null;
+  total: UsageNumbers;
+  levels: Record<string, LevelUsage>;
+}
+
+const isUsageNumbers = (v: unknown): v is UsageNumbers =>
+  isObj(v) && isNum(v.output) && isNum(v.total) && (v.costUsd === null || isNum(v.costUsd));
+
+/** Prüft den Verbrauch; {} (noch nicht nachgetragen) oder Unbekanntes → null. Ungültige Level-Einträge fallen weg. */
+export function parseUsage(data: unknown): Usage | null {
+  if (!isObj(data) || !isUsageNumbers(data.total)) return null;
+  const levels: Record<string, LevelUsage> = {};
+  if (isObj(data.levels)) {
+    for (const [n, e] of Object.entries(data.levels)) {
+      if (isObj(e) && isNum(e.inLevel)) levels[n] = { inLevel: e.inLevel };
+      else if (isUsageNumbers(e)) levels[n] = { output: e.output, total: e.total, costUsd: e.costUsd };
+    }
+  }
+  return {
+    harness: typeof data.harness === 'string' ? data.harness : null,
+    models: Array.isArray(data.models) ? data.models.filter((m): m is string => typeof m === 'string') : [],
+    measuredAt: isIsoOrNull(data.measuredAt) ? (data.measuredAt as string | null) : null,
+    total: { output: data.total.output, total: data.total.total, costUsd: data.total.costUsd },
+    levels,
+  };
+}
+
+/** Lädt den Verbrauch aus dem Backend; jeder Fehler zählt als „noch nicht nachgetragen“ (null). */
+export async function loadUsage(url = '/api/usage'): Promise<Usage | null> {
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok || (res.headers.get('content-type') ?? '').includes('text/html')) return null;
+    return parseUsage(await res.json());
+  } catch {
+    return null;
+  }
+}
+
+/** 1.234 → „1,23 USD“; null → „–“ */
+export function formatUsd(n: number | null): string {
+  return n === null ? '–' : `${formatDecimal(n, 2)} USD`;
+}

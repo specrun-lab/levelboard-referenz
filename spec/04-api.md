@@ -1,4 +1,4 @@
-# 04 – REST-API (ab Level 3; Historie ab Level 4)
+# 04 – REST-API (ab Level 3; Historie ab Level 4; Verbrauch ab Level 10)
 
 Der verbindliche Vertrag ist **`openapi.yaml`** (OpenAPI 3.1). Diese Datei erklärt die Regeln und gibt Beispiele.
 
@@ -24,6 +24,8 @@ Der verbindliche Vertrag ist **`openapi.yaml`** (OpenAPI 3.1). Diese Datei erkl�
 | `GET` | `/api/levels/{n}` | 200, ein Level-Objekt |
 | `POST` | `/api/levels/{n}/result` | 200, der neue Gesamtstand (wie `GET /api/levels`) |
 | `GET` | `/api/levels/{n}/history?limit=50` | 200, die Historie von Level n (ab Level 4) |
+| `GET` | `/api/usage` | 200, der nachgetragene Verbrauch oder `{}` (ab Level 10) |
+| `PUT` | `/api/usage` | 200, der gespeicherte Verbrauch (ab Level 10) |
 
 `{n}` ist eine Zahl von 1 bis 10. Alles andere ergibt 404, z. B. `0`, `11`, `abc`.
 
@@ -64,6 +66,14 @@ Liefert alle **angenommenen** Meldungen zu Level n, **neueste zuerst** (nach `id
 - Keine Meldungen: `"entries": []`.
 - Meldungen mit 409 erscheinen **nicht**.
 - Wird ein höheres Level durch eine neue Meldung geleert, bleibt seine Historie erhalten.
+
+## Verbrauch: `GET` und `PUT /api/usage` (ab Level 10)
+Tokens und Kosten des Laufs misst **nicht** der Agent, sondern der Runner von Specrun **nach** der Prüfung (`02-startausruestung.md`). Er trägt sie mit `PUT /api/usage` auf der Live-Seite nach. Das Backend speichert sie nur und liefert sie wieder aus; es prüft ihren Inhalt nicht.
+- `PUT /api/usage`: Body ist ein beliebiges **JSON-Objekt** (Format in `05-datenmodell.md`, „Verbrauch“). Es **ersetzt** den bisherigen Stand vollständig. Antwort 200 mit genau dem gespeicherten Objekt. `{}` leert den Verbrauch.
+- `GET /api/usage`: 200 mit dem zuletzt gespeicherten Objekt, vor dem ersten `PUT` `{}`.
+- Gespeichert wird in der Datei `usage.json` **im selben Ordner wie die Datenbank** (`LEVELBOARD_DB`, also lokal `.run/usage.json`, im Container `/data/usage.json`). So übersteht der Verbrauch Neustarts und Deploys. Schreiben atomar (temporäre Datei, dann umbenennen).
+- Fehler bei `PUT`, in dieser Reihenfolge: falscher `Content-Type` → 415; Body größer als 64 KB → 413; kein gültiges JSON oder kein Objekt (z. B. Array, Zahl, `null`) → 400. Andere Methoden als `GET` und `PUT` → 405 mit `Allow: GET, PUT`. Ein abgelehnter `PUT` ändert nichts.
+- Die Meldungen der Levels (`POST /api/levels/{n}/result`) berühren den Verbrauch nicht.
 
 ## Fehler
 Immer als `{"error":"<Text in Deutsch>"}`:

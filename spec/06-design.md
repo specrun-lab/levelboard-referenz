@@ -110,23 +110,24 @@ Dazu `color-scheme: dark` auf `:root`.
 ## Responsiv
 | Breite | Anpassung |
 |---|---|
-| ab 1200 px | 5 Spalten; Kacheln des Abschlussberichts in 4 Spalten |
+| ab 1200 px | 5 Spalten; Kacheln des Abschlussberichts in 3 Spalten |
 | 640–1199 px | Raster mit 2 Spalten; Kacheln des Abschlussberichts ebenfalls in 2 Spalten |
-| unter 640 px | Raster mit 1 Spalte und 12 px Abstand; `main` mit 16 px Innenabstand und 16 px Abstand; Kopfzeile mit 0 / 16 px Innenabstand und 16 px Abstand zwischen den Paaren; die `<dt>` der Kopfzeile ausgeblendet; die Paare „Commit“ und „Quelle“ ganz ausgeblendet (die `<dd>` bleiben im DOM); Zusammenfassung untereinander (Spalte, gestreckt) mit 16 px Abstand und 16 px Innenabstand; Abschlussbericht mit 16 px Innenabstand, Kacheln in 1 Spalte mit 12 px Abstand, Liste mit den Spalten `1fr auto` und ohne Zeitpunkt (ausgeblendet) |
+| unter 640 px | Raster mit 1 Spalte und 12 px Abstand; `main` mit 16 px Innenabstand und 16 px Abstand; Kopfzeile mit 0 / 16 px Innenabstand und 16 px Abstand zwischen den Paaren; die `<dt>` der Kopfzeile ausgeblendet; die Paare „Commit“ und „Quelle“ ganz ausgeblendet (die `<dd>` bleiben im DOM); Zusammenfassung untereinander (Spalte, gestreckt) mit 16 px Abstand und 16 px Innenabstand; Abschlussbericht mit 16 px Innenabstand, Kacheln in 1 Spalte mit 12 px Abstand, Kopfzeile und Liste mit den Spalten `1fr auto auto` (Level, Status, Kosten), „Tokens (Ausgabe)“ und Zeitpunkt ausgeblendet |
 
 Bei 375 px Breite darf es kein horizontales Scrollen geben.
 
 ## Abschlussbericht
 Ein Abschnitt unter dem Raster: `<section aria-label="Abschlussbericht" data-testid="report" data-state="ready|empty" data-complete="true|false">`. Er ist gestaltet wie die Zusammenfassung: `--surface`, 1 px `--border`, `--radius`, Innenabstand 24 px, Spalten-Flexbox mit 16 px Abstand. Oben steht die Überschrift `<h2>` „Abschlussbericht“ (16 px, Gewicht 600).
 
-Der Bericht hat **keine eigenen Daten**, er setzt sich aus den Levels zusammen (siehe `05-datenmodell.md`, „Kennzahlen pro Level“).
+Der Bericht hat **keine eigenen Daten**, er setzt sich aus den Levels zusammen (siehe `05-datenmodell.md`, „Kennzahlen pro Level“). Einzige Ausnahme ist der Verbrauch (Kachel „Tokens“ und die Spalten „Kosten“ und „Tokens (Ausgabe)“ der Liste) aus `GET /api/usage` (ab Level 10).
 - **Leer (`empty`)**, solange kein Level geprüft ist, also kein Level ein `checkedAt` hat. Dann zeigt er nur `<p data-testid="report-empty">` mit genau dem Text `Noch kein Abschlussbericht – er erscheint, sobald das erste Level geprüft ist.` in `--muted`, 14 px.
 - Sonst ist er **gefüllt (`ready`)**.
 - `data-complete` ist `true`, wenn Level 10 `bestanden` ist, sonst `false`.
 
-Gefüllt zeigt er **4 Kacheln** in einem Raster (4 Spalten, 16 px Abstand, Reihenfolge wie in der Tabelle) und danach die **Liste der 10 Levels**.
+Gefüllt zeigt er **5 Kacheln** in einem Raster (3 Spalten, 16 px Abstand, Reihenfolge wie in der Tabelle) und danach die **Liste der 10 Levels**.
 - Jede Kachel: `--surface-2`, 1 px `--border`, `--radius`, Innenabstand 16 px. Oben ein `<h3>` (12 px, Gewicht 600, `--muted`, Großbuchstaben, `letter-spacing: 0.06em`), darunter eine `<dl>`. Jedes Paar steht in einer Zeile mit `space-between`: `<dt>` 13 px `--muted`, `<dd>` Schrift `--mono` 13 px.
 - Fehlen einer Kachel die Daten, zeigt sie statt der `<dl>` nur `<p data-testid="report-<teil>-missing">noch nicht erreicht</p>` (13 px, `--faint`). `<teil>` ist `loadtest`, `images` bzw. `pipeline`.
+- Die Kachel „Tokens“ zeigt ohne nachgetragenen Verbrauch stattdessen `<p data-testid="report-tokens-missing">wird nach der Prüfung ergänzt</p>` (gleich gestaltet).
 
 | Kachel (`<h3>`) | Daten | `<dt>` | `<dd>`, testid | Wert |
 |---|---|---|---|---|
@@ -136,6 +137,11 @@ Gefüllt zeigt er **4 Kacheln** in einem Raster (4 Spalten, 16 px Abstand, Reihe
 | | | Bauzeit gesamt | `report-build-time` | Summe `buildS` aller Levels mit eigener Bauzeit (nicht `inLevel`), Format wie „Bauzeit“ der Karte; ohne Einträge: „–“ |
 | | | Commit | `report-commit` | erste 7 Zeichen von `run.commit`, sonst „–“ |
 | | | Stand | `report-time` | `run.updatedAt`, formatiert wie „Geprüft“ |
+| Tokens | Verbrauch aus `GET /api/usage` (ab Level 10, `05-datenmodell.md`) | Harness | `report-harness` | `harness`, sonst „–“ |
+| | | Modell | `report-model` | `models`, mit `, ` verbunden; leer: „–“ |
+| | | Tokens (Ausgabe) | `report-tokens-output` | `total.output` mit Tausendertrennzeichen wie `toLocaleString('de-CH')` (z. B. `812’345`) |
+| | | Tokens gesamt | `report-tokens-total` | `total.total`, ebenso |
+| | | Kosten gesamt | `report-cost` | `total.costUsd` mit 2 Nachkommastellen und Komma, dann ` USD` (z. B. `2,04 USD`); `null`: „–“ |
 | Lasttest | `metrics.loadtest` von Level 9 | p50 | `report-p50` | `<p50Ms> ms` |
 | | | p95 | `report-p95` | `<p95Ms> ms` |
 | | | Durchsatz | `report-rps` | `<rps> Anfragen/s` mit 1 Nachkommastelle und Komma |
@@ -148,9 +154,10 @@ Gefüllt zeigt er **4 Kacheln** in einem Raster (4 Spalten, 16 px Abstand, Reihe
 | | | Gesamt | `report-pipeline-total` | `<totalS> s` |
 
 - In der Kachel „Pipeline“ steht unter der `<dl>` ein Link `<a data-testid="report-pipeline-link" href="<pipeline.url>" target="_blank" rel="noreferrer">` mit dem Text „Lauf ansehen“ in `--accent`, 13 px.
-- **Liste:** `<ol data-testid="report-levels">` ohne Aufzählungszeichen, mit 10 `<li data-testid="report-level" data-level="<n>" data-status="<status>">`.
-  - Jede Zeile ist ein Raster mit den Spalten `1fr 140px 160px`, 12 px Abstand, Innenabstand 6 px / 0, oben 1 px `--border`, 13 px.
-  - Inhalt: `L<nn> <Titel>` (z. B. `L01 Statische Seite`), dann der Status wie im Abzeichen in der Farbe `--st-<status>`, dann `checkedAt` formatiert wie „Geprüft“ in `--mono` und `--muted`, rechtsbündig.
+- **Liste:** Vor der Liste eine Kopfzeile (`aria-hidden="true"`) mit den Spalten „Level“, „Status“, „Kosten“, „Tokens (Ausgabe)“ und „Geprüft“: dasselbe Raster wie die Zeilen, 12 px, Gewicht 600, `--muted`, Großbuchstaben, `letter-spacing: 0.06em`, die letzten drei rechtsbündig. Danach `<ol data-testid="report-levels">` ohne Aufzählungszeichen, mit 10 `<li data-testid="report-level" data-level="<n>" data-status="<status>">`.
+  - Jede Zeile ist ein Raster mit den Spalten `1fr 120px 110px 130px 150px`, 12 px Abstand, Innenabstand 6 px / 0, oben 1 px `--border`, 13 px.
+  - Inhalt: `L<nn> <Titel>` (z. B. `L01 Statische Seite`), dann der Status wie im Abzeichen in der Farbe `--st-<status>`, dann **Kosten** (`<span data-testid="report-level-cost">`) und **Tokens (Ausgabe)** (`<span data-testid="report-level-output">`) aus `levels["<n>"]` des Verbrauchs, dann `checkedAt` formatiert wie „Geprüft“ in `--muted`. Die letzten drei in `--mono`, rechtsbündig.
+  - Kosten: `costUsd` wie „Kosten gesamt“; Tokens (Ausgabe): `output` wie „Tokens (Ausgabe)“. Bei `{ "inLevel": n }` steht in beiden `in L<nn>` (z. B. `in L03`). Ohne Verbrauch oder ohne Eintrag für das Level: „–“.
 
 ## Verbindliche `data-testid`s
 | testid | Element |
@@ -173,6 +180,9 @@ Gefüllt zeigt er **4 Kacheln** in einem Raster (4 Spalten, 16 px Abstand, Reihe
 | `report` | Abschlussbericht, mit `data-state` `ready` bzw. `empty` und `data-complete` |
 | `report-empty` | Hinweis „Noch kein Abschlussbericht …“ |
 | `report-loadtest-missing`, `report-images-missing`, `report-pipeline-missing` | Platzhalter „noch nicht erreicht“ einer Kachel |
+| `report-tokens-missing` | Platzhalter „wird nach der Prüfung ergänzt“ der Kachel „Tokens“ (ab Level 10) |
+| `report-harness`, `report-model`, `report-tokens-output`, `report-tokens-total`, `report-cost` | Werte der Kachel „Tokens“ (ab Level 10) |
+| `report-level-cost`, `report-level-output` | Kosten und Tokens (Ausgabe) je Zeile der Liste (ab Level 10) |
 | `level-build-time` | Wert „Bauzeit“ in der Karte |
 | `report-reached`, `report-score`, `report-complete`, `report-build-time`, `report-commit`, `report-time`, `report-p50`, `report-p95`, `report-rps`, `report-errors`, `report-image-frontend`, `report-image-backend`, `report-job-check`, `report-job-images`, `report-job-deploy`, `report-pipeline-total`, `report-pipeline-link` | Werte des Abschlussberichts (siehe oben) |
 | `report-levels`, `report-level` | Liste der Levels im Abschlussbericht, Einträge mit `data-level` und `data-status` |

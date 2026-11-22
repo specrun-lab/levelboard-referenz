@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { POLL_MS, emptyResults, loadFromApi, loadResults, loadSource, type LoadState, type Source } from './results';
+import { POLL_MS, emptyResults, loadFromApi, loadResults, loadSource, loadUsage, type LoadState, type Source, type Usage } from './results';
 import Header from './components/Header';
 import Summary from './components/Summary';
 import Notice from './components/Notice';
@@ -9,16 +9,19 @@ import Report from './components/Report';
 export default function App() {
   const [source, setSource] = useState<Source | null>(null);
   const [state, setState] = useState<LoadState>({ kind: 'loading' });
+  const [usage, setUsage] = useState<Usage | null>(null);
 
   useEffect(() => {
     let active = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
 
-    // API-Modus: sofort laden, danach alle POLL_MS erneut (nächster Abruf erst nach Ende des vorigen)
+    // API-Modus: sofort laden, danach alle POLL_MS erneut (nächster Abruf erst nach Ende des vorigen).
+    // Der Verbrauch (/api/usage) kommt mit, fehlt er, bleibt der Bericht ohne Kosten.
     const poll = async () => {
-      const s = await loadFromApi();
+      const [s, u] = await Promise.all([loadFromApi(), loadUsage()]);
       if (!active) return;
       setState(s);
+      setUsage(u);
       timer = setTimeout(poll, POLL_MS);
     };
 
@@ -49,7 +52,7 @@ export default function App() {
             <LevelCard key={l.level} result={l} />
           ))}
         </section>
-        <Report levels={results.levels} commit={results.run.commit} updatedAt={results.run.updatedAt} />
+        <Report levels={results.levels} commit={results.run.commit} updatedAt={results.run.updatedAt} usage={source === 'api' ? usage : null} />
       </main>
     </div>
   );

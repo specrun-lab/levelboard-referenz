@@ -145,6 +145,22 @@ Die **Bauzeit** eines Levels ist die Zeit, die du gebraucht hast, bis `make chec
 - „Jetzt“ ist die Zeit in UTC im Format von `toISOString()`.
 - `metrics.build` jedes Levels mit Eintrag ist genau dieser Eintrag. Die Seite zeigt daraus die Bauzeit pro Karte und die Summe im Abschlussbericht (`06-design.md`).
 
+## Verbrauch (ab Level 10): `GET /api/usage`
+Tokens und Kosten kommen **nicht** in `metrics`. Sie werden nach der Prüfung vom Runner gemessen und per `PUT /api/usage` nachgetragen (`04-api.md`). Bis dahin liefert `GET /api/usage` `{}`. Das Format:
+```json
+{ "harness": "claude",
+  "models": ["claude-haiku-5-5"],
+  "measuredAt": "2026-11-22T12:00:00.000Z",
+  "total": { "output": 812345, "total": 23456789, "costUsd": 2.04 },
+  "levels": { "1": { "inLevel": 3 },
+              "2": { "inLevel": 3 },
+              "3": { "output": 120345, "total": 3456789, "costUsd": 0.42 } } }
+```
+- `total`: Summe des ganzen Laufs. `output` = Tokens (Ausgabe), `total` = alle Tokens (Eingabe, Cache, Ausgabe), `costUsd` = Kosten in USD oder `null`, wenn der Preis des Modells unbekannt ist.
+- `levels`: pro Level dieselben drei Felder, oder `{ "inLevel": n }`, wenn das Level in der Phase von Level `n` enthalten ist (wie bei der Bauzeit). Fehlt ein Level, zeigt die Seite „–“.
+- Im API-Modus lädt die Seite `GET /api/usage` bei jedem Abruf zusammen mit `GET /api/levels`. Ist die Antwort kein Objekt mit gültigem `total` (z. B. `{}`, Fehler, nicht erreichbar), gilt der Verbrauch als **noch nicht nachgetragen**. Das ändert den Ladezustand der Seite nicht. Ungültige Einträge in `levels` werden ignoriert.
+- Im Datei-Modus gibt es keinen Verbrauch.
+
 ## Datenbank (ab Level 4)
 Das Backend speichert in einer SQLite-Datei (Pfad aus `LEVELBOARD_DB`, Standard `.run/levelboard.db`). Das Schema ist **exakt** so anzulegen, mit Spalten in dieser Reihenfolge:
 
